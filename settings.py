@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     SECRET_KEY_JWT: str
-    SECRET_AUTH: str
+    SECRET_KEY_AUTH: str
 
     class Config:
         env_file = ".env"
