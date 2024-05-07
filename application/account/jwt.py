@@ -9,7 +9,7 @@ from settings import settings
 SECRET_KEY = settings.SECRET_KEY_AUTH
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 5
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 ACCESS_TOKEN_TYPE = 'access'
@@ -17,7 +17,7 @@ REFRESH_TOKEN_TYPE = 'refresh'
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 def create_jwt(token_type: str, token_data: dict, expires_delta: timedelta | None = timedelta(minutes=15)) -> str:

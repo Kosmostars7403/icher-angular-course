@@ -1,7 +1,9 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from application.account.helpers import get_current_user_from_refresh, get_current_active_user
 from application.account.jwt import create_access_token, create_refresh_token
 from application.account.models import User
@@ -10,8 +12,8 @@ from application.account.validation import get_password_hash, authenticate_user
 from database.db import get_async_session
 
 router = APIRouter(
-    tags=['users'],
-    prefix='/users',
+    tags=['auth'],
+    prefix='/auth',
 )
 
 
