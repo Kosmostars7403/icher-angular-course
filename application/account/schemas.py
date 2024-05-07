@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, alias_generators, Field
 
 
 class Token(BaseModel):
@@ -12,6 +12,9 @@ class TokenData(BaseModel):
 
 
 class UserReadSchema(BaseModel):
+    model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
+                              arbitrary_types_allowed=True, from_attributes=True)
+
     id: int
     tg_id: int
     username: str
@@ -23,31 +26,25 @@ class UserReadSchema(BaseModel):
     city: str | None = None
     description: str | None = None
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class UserCreateSchema(BaseModel):
-    tg_id: int
-    username: str
-    password: str
+    model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
+                              arbitrary_types_allowed=True, from_attributes=True)
+
+    tg_id: int = Field(validation_alias='id')
+    username: str | None = None
     name: str | None = None
     last_name: str | None = None
-    is_active: bool | None = None
-    stack: list[str] | None = []
-    city: str | None = None
-    description: str | None = None
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserUpdateSchema(BaseModel):
-    password: str | None = None
+    model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
+                              arbitrary_types_allowed=True, from_attributes=True)
+
     stack: list[str] | None = []
     city: str | None = None
     description: str | None = None
     image: bytes | None = None
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserInDBSchema(UserReadSchema):

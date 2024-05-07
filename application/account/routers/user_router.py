@@ -23,9 +23,6 @@ async def get_me(current_user: Annotated[User, Depends(get_current_active_user)]
 async def update_me(new_data: UserUpdateSchema, current_user: Annotated[User, Depends(get_current_active_user)]):
     new_data = new_data.model_dump(exclude_none=True)
 
-    if new_data.get('password'):
-        new_data['hashed_password'] = get_password_hash(new_data.pop('password'))
-
     return await update_user(current_user, new_data)
 
 

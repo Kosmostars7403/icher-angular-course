@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.account.helpers import get_current_user_from_refresh, get_current_active_user
 from application.account.jwt import create_access_token, create_refresh_token
 from application.account.models import User
+from application.account.password_generator import password_generator
 from application.account.schemas import Token, UserReadSchema, UserCreateSchema
 from application.account.validation import get_password_hash, authenticate_user
 from database.db import get_async_session
@@ -55,11 +56,17 @@ async def logout():
 
 @router.post('/register')
 async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = Depends(get_async_session)):
-    user_data = new_user.model_dump(exclude={'password'})
-    user_data['hashed_password'] = get_password_hash(new_user.password)
+    user_data = new_user.model_dump()
+    password = await password_generator()
+    user_data['hashed_password'] = get_password_hash(password)
+
+    if not user_data['username']:
+        user_data['username'] = new_user.last_name + ' ' + new_user.name
 
     user = User(**user_data)
 
     session.add(user)
 
     await session.commit()
+
+    return {'password': password}
