@@ -1,15 +1,12 @@
-from datetime import timedelta
-
-from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-
-from application.account.jwt import authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, \
-    get_password_hash, get_current_active_user
-from application.account.models import User
-from application.account.schemas import Token, UserCreateSchema
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from application.account.helpers import get_current_user_from_refresh, get_current_active_user
+from application.account.jwt import create_access_token, create_refresh_token
+from application.account.models import User
+from application.account.schemas import Token, UserReadSchema, UserCreateSchema
+from application.account.validation import get_password_hash, authenticate_user
 from database.db import get_async_session
 
 router = APIRouter(
@@ -18,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/token")
+@router.post("/token", response_model=Token)
 async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -29,11 +26,29 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username}
+    )
+
+    refresh_token = create_refresh_token(
+        data={"sub": user.username}
+    )
+
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+
+@router.post('/refresh', response_model=Token, response_model_exclude_none=True, )
+async def refresh_token(user: UserReadSchema = Depends(get_current_user_from_refresh)):
+    access_token = create_access_token(
+        data={"sub": user.username}
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post('/logout', dependencies=[Depends(get_current_active_user)])
+async def logout():
+    return {'message': 'logout'}
 
 
 @router.post('/register')
@@ -46,8 +61,3 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     session.add(user)
 
     await session.commit()
-
-
-@router.post('/test')
-async def test(current_user: Annotated[User, Depends(get_current_active_user)]):
-    return current_user

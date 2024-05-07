@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str | None = None
     token_type: str
 
 
@@ -11,6 +12,7 @@ class TokenData(BaseModel):
 
 
 class UserReadSchema(BaseModel):
+    id: int
     tg_id: int
     username: str
     name: str | None = None
@@ -20,8 +22,18 @@ class UserReadSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserCreateSchema(UserReadSchema):
+class UserCreateSchema(BaseModel):
+    tg_id: int
+    username: str
     password: str
+    name: str | None = None
+    last_name: str | None = None
+    is_active: bool | None = None
+    stack: list[str] | None = []
+    city: str | None = None
+    description: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserInDBSchema(UserReadSchema):
