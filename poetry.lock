@@ -1309,6 +1309,17 @@ files = [
 ]
 
 [[package]]
+name = "random-username"
+version = "1.0.2"
+description = "Randomly generate compelling usernames."
+optional = false
+python-versions = "*"
+files = [
+    {file = "random-username-1.0.2.tar.gz", hash = "sha256:5fdc0604b5d1bdfe4acf4cd7491a9de1caf41bbdd890f646b434e09ae2a1b7ce"},
+    {file = "random_username-1.0.2-py3-none-any.whl", hash = "sha256:2536feb63fecde7e01ede4a541aadb6f0b58794a7ab327ca5369d2a4b7664c06"},
+]
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 description = "Python HTTP for Humans."
@@ -1877,4 +1888,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "1297986593147d8f869478c4fdf066505b1ee6e44efb9ab2a5ead3765d940278"
+content-hash = "0e8d001fd660ee0c2887209fe9a7ee41d041fabb6464060dd6cbff0c83825e2e"

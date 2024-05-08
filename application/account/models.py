@@ -11,8 +11,8 @@ class User(Base):
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False, primary_key=True)
-    name: Mapped[str | None] = mapped_column(String(length=200), nullable=False)
-    last_name: Mapped[str | None] = mapped_column(String(length=200), nullable=False)
+    first_name: Mapped[str | None] = mapped_column(String(length=200), nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String(length=200), nullable=True)
     username: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
     image: ImageField | None = Column(ImageField())
     stack: ARRAY | None = Column(ARRAY(String), default=[])

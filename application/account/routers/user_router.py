@@ -1,14 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, File
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema
-from application.account.validation import get_password_hash
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from database.db import get_async_session
 
 router = APIRouter(
@@ -36,3 +34,9 @@ async def delete_me(current_user: Annotated[User, Depends(get_current_active_use
     await delete_user(user=current_user, session=session)
 
     return {'message': 'User deleted'}
+
+
+@router.post('/load_image', status_code=status.HTTP_202_ACCEPTED)
+async def load_image(current_user: Annotated[User, Depends(get_current_active_user)]):
+
+    return {'message': 'Image uploaded'}

@@ -16,6 +16,7 @@ pillow = "^10.3.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 bcrypt = "3.2.2"
+random-username = "^1.0.2"
 
 
 [build-system]
