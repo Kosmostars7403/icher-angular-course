@@ -1,25 +1,31 @@
-from sqlalchemy.orm import Session
 from datetime import datetime
-from . import models
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+# from sqlalchemy import select
+from .models import Post
 
 
-def create_post(db: Session, title: str, content: str, author_id: int):
-    new_post = models.Post(
+async def get_all_posts(session: AsyncSession):
+    async with session.begin():
+        result = await session.execute(select(Post))
+        return result.scalars().all()
+    
+
+async def get_post(session: AsyncSession, post_id: int):
+    return await session.get(Post, post_id)
+
+
+async def create_post(session: AsyncSession, title: str, content: str, author: int):
+    new_post = Post(
         title=title,
         content=content,
-        author=author_id,
+        author=author,
         created_at=datetime.utcnow()
     )
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
+    session.add(new_post)
+    await session.commit()
     return new_post
 
 
-def get_post(db: Session, post_id: int):
-    return db.query(models.Post).filter(models.Post.id == post_id).first()
-
-
-def get_all_posts(db: Session):
-    return db.query(models.Post).all()
 

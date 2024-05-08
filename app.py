@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from application.account.router import router as account_router
+from application.post.router import router as post_router
 
 app = FastAPI(
     title='AngularCourse'
@@ -21,6 +22,4 @@ app.add_middleware(
 )
 
 app.include_router(account_router)
-
-
-
+app.include_router(post_router)

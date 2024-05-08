@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -6,13 +6,14 @@ class PostBase(BaseModel):
     title: str
     content: str
 
-class PostCreate(PostBase):
-    pass
+class PostCreate(BaseModel):
+    title: str
+    content: str
+    author: int
 
 class Post(PostBase):
     id: int
     created_at: datetime
-    author_id: int
+    author: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
