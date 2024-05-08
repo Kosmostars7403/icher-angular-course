@@ -15,10 +15,10 @@ def get_password_hash(password):
 
 async def authenticate_user(username: str, password: str):
     user = await get_user(username=username)
-    user_db_schema = UserInDBSchema.model_validate(user)
-    if not user_db_schema:
+
+    if not user:
         return False
-    if not verify_password(password, user_db_schema.hashed_password):
+    if not verify_password(password, UserInDBSchema.model_validate(user).hashed_password):
         return False
     return user
 

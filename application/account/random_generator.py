@@ -6,7 +6,7 @@ LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
 
-async def password_generator(length: int = 10):
+async def password_generator(length: int = 10) -> str:
     printable = f'{LETTERS}{NUMBERS}'
 
     printable = list(printable)
@@ -18,5 +18,5 @@ async def password_generator(length: int = 10):
     return random_password
 
 
-async def generate_unique_username():
+async def generate_unique_username() -> str:
     return generate_username()[0]

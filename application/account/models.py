@@ -1,20 +1,19 @@
 from datetime import datetime
-
 from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy_file import ImageField
-
 from database.db import Base
+
+IMAGE_DIR = 'static/avatars'
 
 
 class User(Base):
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False, primary_key=True)
-    first_name: Mapped[str | None] = mapped_column(String(length=200), nullable=True)
-    last_name: Mapped[str | None] = mapped_column(String(length=200), nullable=True)
+    first_name: Mapped[str | None] = mapped_column(String(length=200))
+    last_name: Mapped[str | None] = mapped_column(String(length=200))
     username: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
-    image: ImageField | None = Column(ImageField())
+    image_url: Mapped[str | None] = mapped_column(String(length=1024))
     stack: ARRAY | None = Column(ARRAY(String), default=[])
     city: Mapped[str | None] = mapped_column(String(length=100))
     description: Mapped[str | None] = mapped_column(String(length=1000))

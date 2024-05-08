@@ -9,9 +9,9 @@ class UserReadSchema(BaseModel):
     username: str
     first_name: str | None = ''
     last_name: str | None = ''
-    is_active: bool
+    is_active: bool | None = True
     stack: list[str] | None = []
-    image: bytes | None = None
+    image_url: str | None = None
     city: str | None = ''
     description: str | None = ''
 
@@ -33,7 +33,6 @@ class UserUpdateSchema(BaseModel):
     stack: list[str] | None = []
     city: str | None = ''
     description: str | None = ''
-    image: bytes | None = None
 
 
 class UserInDBSchema(UserReadSchema):
