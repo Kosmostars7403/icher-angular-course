@@ -7,9 +7,9 @@ from .models import Post
 
 
 async def get_all_posts(session: AsyncSession):
-    async with session.begin():
-        result = await session.execute(select(Post))
-        return result.scalars().all()
+    result = await session.execute(select(Post))
+    return result.scalars()
+    # .all()
     
 
 async def get_post(session: AsyncSession, post_id: int):
