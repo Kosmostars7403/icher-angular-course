@@ -2,7 +2,7 @@ from application.account.jwt import pwd_context
 from application.account.crud import get_user
 from fastapi import HTTPException, status
 
-from application.account.schemas import UserInDBSchema
+from application.account.schemas.user_schemas import UserInDBSchema
 
 
 def verify_password(plain_password, hashed_password):

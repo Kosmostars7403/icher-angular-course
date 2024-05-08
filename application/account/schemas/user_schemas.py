@@ -1,22 +1,11 @@
 from pydantic import BaseModel, ConfigDict, alias_generators, Field
 
 
-class Token(BaseModel):
-    access_token: str
-    refresh_token: str | None = None
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: str | None = None
-
-
 class UserReadSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
                               arbitrary_types_allowed=True, from_attributes=True)
 
-    id: int
-    tg_id: int
+    id: int = Field(validation_alias='tg_id')
     username: str
     name: str | None = None
     last_name: str | None = None
@@ -31,7 +20,7 @@ class UserCreateSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
                               arbitrary_types_allowed=True, from_attributes=True)
 
-    tg_id: int = Field(validation_alias='id')
+    id: int = Field(validation_alias='tg_id')
     username: str | None = None
     name: str | None = None
     last_name: str | None = None

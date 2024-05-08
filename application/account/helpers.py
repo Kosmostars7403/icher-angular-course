@@ -3,10 +3,9 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
 
-from application.account.schemas import UserReadSchema
-from .jwt import SECRET_KEY, ALGORITHM, oauth2_scheme, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
 from application.account.crud import get_user
-from .models import User
+from .jwt import SECRET_KEY, ALGORITHM, oauth2_scheme, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
+from .schemas.user_schemas import UserReadSchema
 from .validation import validate_token_type
 
 CREDENTIALS_EXCEPTION = HTTPException(

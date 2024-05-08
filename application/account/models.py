@@ -1,18 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY, select
+from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy_file import ImageField
 
-from application.account.schemas import UserInDBSchema
-from database.db import Base, async_session
+from database.db import Base
 
 
 class User(Base):
     __tablename__ = 'user'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tg_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False, primary_key=True)
     name: Mapped[str | None] = mapped_column(String(length=200), nullable=False)
     last_name: Mapped[str | None] = mapped_column(String(length=200), nullable=False)
     username: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)

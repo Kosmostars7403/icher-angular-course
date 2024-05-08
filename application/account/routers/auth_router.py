@@ -8,7 +8,8 @@ from application.account.helpers import get_current_user_from_refresh, get_curre
 from application.account.jwt import create_access_token, create_refresh_token
 from application.account.models import User
 from application.account.password_generator import password_generator
-from application.account.schemas import Token, UserReadSchema, UserCreateSchema
+from application.account.schemas.token_schemas import Token
+from application.account.schemas.user_schemas import UserReadSchema, UserCreateSchema
 from application.account.validation import get_password_hash, authenticate_user
 from database.db import get_async_session
 
