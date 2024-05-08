@@ -16,6 +16,8 @@ python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 bcrypt = "3.2.2"
 random-username = "^1.0.2"
+fastapi-filter = "^2.0.0"
+fastapi-pagination = "^0.12.24"
 
 
 [build-system]

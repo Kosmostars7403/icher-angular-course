@@ -1,8 +1,13 @@
+import math
+
 from sqlalchemy import select, update, delete
 
+from application.account.filters import UserFilter
 from application.account.models import User
+from application.account.schemas.user_schemas import UserReadSchemaShort
 from database.db import async_session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql.array import CONTAINS
 import os
 
 
@@ -41,3 +46,19 @@ async def delete_user(user: User, session: AsyncSession):
 
     await session.execute(stmt)
     await session.commit()
+
+
+async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSession, stack: str):
+
+    if stack:
+        stack = stack.split(',')
+        stmt = select(User).where(User.is_active and User.id != user.id and CONTAINS(User.stack, stack))
+    else:
+        stmt = select(User).where(User.is_active and User.id != user.id)
+
+    query_filter = user_filter.filter(user_filter.sort(stmt))
+
+    filtered_data = [UserReadSchemaShort.model_validate(user) for user in
+                     (await session.execute(query_filter)).scalars()]
+
+    return filtered_data
