@@ -13,7 +13,7 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(length=200))
     last_name: Mapped[str | None] = mapped_column(String(length=200))
     username: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
-    image_url: Mapped[str | None] = mapped_column(String(length=1024))
+    avatar_url: Mapped[str | None] = mapped_column(String(length=1024))
     stack: ARRAY | None = Column(ARRAY(String), default=[])
     city: Mapped[str | None] = mapped_column(String(length=100))
     description: Mapped[str | None] = mapped_column(String(length=1000))

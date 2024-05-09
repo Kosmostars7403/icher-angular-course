@@ -50,12 +50,12 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
 
     filename = f"{current_user.username}.jpg"
 
-    image_url = os.path.join(IMAGE_DIR, filename)
+    avatar_url = os.path.join(IMAGE_DIR, filename)
 
-    with open(image_url, 'wb') as f:
+    with open(avatar_url, 'wb') as f:
         f.write(image_content)
 
-    return await upload_image_in_db(user=current_user, image_url=image_url, session=session)
+    return await upload_image_in_db(user=current_user, avatar_url=avatar_url, session=session)
 
 
 @router.get('/profiles', status_code=status.HTTP_200_OK)

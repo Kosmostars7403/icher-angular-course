@@ -1,14 +1,25 @@
-from sqlalchemy import Integer, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+
+from sqlalchemy import Integer, ForeignKey, String, Date, TIMESTAMP, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from application.personal_chat.models import PersonalChat
 
 
 class Message(Base):
     __tablename__ = 'message'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_from: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
-    user_to: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
-    message: Mapped[str] = mapped_column(String)
+    user_from_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
+    personal_chat_id: Mapped[int] = mapped_column(Integer, ForeignKey('personal_chat.id'))
+    text: Mapped[str] = mapped_column(String)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP)
 
+    personal_chat: Mapped['PersonalChat'] = relationship('PersonalChat')

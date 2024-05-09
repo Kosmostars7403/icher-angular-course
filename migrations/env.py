@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from settings import settings
 from application.personal_chat.models import *
+from application.message.models import *
 from application.account.models import *
 from application.post.models import *
 

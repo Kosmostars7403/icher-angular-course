@@ -29,8 +29,8 @@ async def update_user(user: User, data: dict, session: AsyncSession):
     return await get_user(user.username)
 
 
-async def upload_image_in_db(user: User, image_url: str, session: AsyncSession):
-    stmt = update(User).where(User.id == user.id).values(image_url=image_url)
+async def upload_image_in_db(user: User, avatar_url: str, session: AsyncSession):
+    stmt = update(User).where(User.id == user.id).values(avatar_url=avatar_url)
     await session.execute(stmt)
     await session.commit()
 
@@ -41,8 +41,8 @@ async def delete_user(user: User, session: AsyncSession):
 
     stmt = delete(User).where(User.id == user.id)
 
-    if os.path.exists(user.image_url):
-        os.remove(user.image_url)
+    if os.path.exists(user.avatar_url):
+        os.remove(user.avatar_url)
 
     await session.execute(stmt)
     await session.commit()

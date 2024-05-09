@@ -11,7 +11,7 @@ class UserReadSchemaShort(BaseModel):
     last_name: str | None = ''
     is_active: bool | None = True
     stack: list[str] | None = []
-    image_url: str | None = None
+    avatar_url: str | None = None
     city: str | None = ''
 
 
