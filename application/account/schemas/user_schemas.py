@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, alias_generators, Field
+from pydantic import BaseModel, ConfigDict, alias_generators, Field, field_validator
 
 
 class UserReadSchemaShort(BaseModel):
@@ -13,6 +13,18 @@ class UserReadSchemaShort(BaseModel):
     stack: list[str] | None = []
     avatar_url: str | None = None
     city: str | None = ''
+    subscriptions_amount: int | None = Field(validation_alias='subscriptions')
+
+    @field_validator('subscriptions_amount', mode='before')
+    def get_list_length(cls, v):
+        if isinstance(v, list):
+            return len(v)
+        elif isinstance(v, int):
+            return v
+
+
+class SubscriptionsSchema(BaseModel):
+    subscriptions: list[UserReadSchemaShort]
 
 
 class UserReadSchema(UserReadSchemaShort):

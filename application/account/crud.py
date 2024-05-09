@@ -26,7 +26,7 @@ async def update_user(user: User, data: dict, session: AsyncSession):
     await session.execute(stmt)
     await session.commit()
 
-    return await get_user(user.username)
+
 
 
 async def upload_image_in_db(user: User, avatar_url: str, session: AsyncSession):
@@ -34,7 +34,6 @@ async def upload_image_in_db(user: User, avatar_url: str, session: AsyncSession)
     await session.execute(stmt)
     await session.commit()
 
-    return await get_user(user.username)
 
 
 async def delete_user(user: User, session: AsyncSession):
@@ -62,3 +61,17 @@ async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSessi
                      (await session.execute(query_filter)).scalars()]
 
     return filtered_data
+
+
+async def get_user_by_id(user_id: int, session: AsyncSession):
+    stmt = select(User).where(User.id == user_id)
+    user = await session.scalar(stmt)
+
+    return user
+
+
+async def get_user_subscriptions(user: User, session: AsyncSession):
+
+    user.subscriptions = [await get_user_by_id(user_id, session) for user_id in user.subscriptions]
+
+    return user

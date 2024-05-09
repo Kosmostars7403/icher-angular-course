@@ -17,6 +17,7 @@ class User(Base):
     stack: ARRAY | None = Column(ARRAY(String), default=[])
     city: Mapped[str | None] = mapped_column(String(length=100))
     description: Mapped[str | None] = mapped_column(String(length=1000))
+    subscriptions: ARRAY | None = Column(ARRAY(Integer), default=[])
 
     registered_at: Mapped[Date] = mapped_column(TIMESTAMP, default=datetime.utcnow)
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)

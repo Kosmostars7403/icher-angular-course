@@ -9,7 +9,7 @@ from application.message.crud import read_personal_chat_user_messages
 from application.message.schemas import MessageReadSchema
 from application.personal_chat.crud import get_personal_chat, get_personal_chats_by_user, create_personal_chat_db
 from application.personal_chat.models import PersonalChat
-from application.personal_chat.schemas import PersonalChatReadSchema, PersonalChatReadSortSchema
+from application.personal_chat.schemas import PersonalChatReadSchema, PersonalChatReadShortSchema
 from database.db import get_async_session
 
 router = APIRouter(
@@ -35,7 +35,7 @@ async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends
     return await get_personal_chat(chat_id=chat_id, session=session)
 
 
-@router.get('/get_my_chats/')
+@router.get('/get_my_chats/', response_model=list[PersonalChatReadShortSchema])
 async def get_chats(current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
     chats = await get_personal_chats_by_user(user=current_user, session=session)
@@ -43,10 +43,10 @@ async def get_chats(current_user: Annotated[User, Depends(get_current_active_use
     chats_schemas = []
 
     for chat in chats:
-        chats_schemas.append(PersonalChatReadSortSchema(
+        chats_schemas.append(PersonalChatReadShortSchema(
             id=chat.id,
             user_from=chat.user_first if chat.user_first_id != current_user.id else chat.user_second,
-            message=(chat.messages[-1].text[:100] + '...' if len(chat.messages) > 0 else None)
+            message=(chat.messages[-1].text[:100] if len(chat.messages) > 0 else None)
         ))
 
     return chats_schemas
