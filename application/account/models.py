@@ -1,10 +1,14 @@
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database.db import Base
+from typing import TYPE_CHECKING
 
 IMAGE_DIR = 'static/avatars'
 
+if TYPE_CHECKING:
+    from application.post.models import Post
+    from application.comment.models import Comment
 
 class User(Base):
     __tablename__ = 'user'
@@ -23,5 +27,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    posts: Mapped[list['Post']] = relationship(back_populates='author')
+    comments: Mapped[list['Comment']] = relationship(back_populates='author')
 
 

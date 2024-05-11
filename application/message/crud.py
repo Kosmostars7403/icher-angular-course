@@ -36,7 +36,7 @@ async def get_message(message_id: int, session: AsyncSession):
 
 
 async def update_message(message_id: int, text: str, session: AsyncSession):
-    stmt = update(Message).filter(Message.id == message_id).values(text=text, updated_at=datetime.now())
+    stmt = update(Message).filter(Message.id == message_id).values(text=text)
     await session.execute(stmt)
     await session.commit()
 

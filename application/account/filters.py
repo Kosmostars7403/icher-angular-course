@@ -17,8 +17,5 @@ class UserFilter(Filter):
         if value:
             return alias_generators.to_snake(value)
 
-    # @field_validator("stack__in", mode='after')
-    # def
-
     class Constants(Filter.Constants):
         model = User

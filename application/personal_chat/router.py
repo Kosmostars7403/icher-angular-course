@@ -13,8 +13,8 @@ from application.personal_chat.schemas import PersonalChatReadSchema, PersonalCh
 from database.db import get_async_session
 
 router = APIRouter(
-    tags=['chats'],
-    prefix='/personal_chat'
+    tags=['chat'],
+    prefix='/chat'
 )
 
 

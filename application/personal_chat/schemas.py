@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict, alias_generators
+from pydantic import BaseModel, ConfigDict, alias_generators
 
 from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.message.schemas import MessageReadSchema
