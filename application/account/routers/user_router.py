@@ -9,10 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user, upload_image_in_db, get_all_users, get_user_by_id, \
     get_user, get_user_subscriptions
-from application.account.filters import UserFilter, QueryParams
+from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
-from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort, SubscriptionsSchema
+from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort, \
+    SubscriptionsSchema
 from database.db import get_async_session
 
 disable_installed_extensions_check()

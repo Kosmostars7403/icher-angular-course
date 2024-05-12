@@ -1,14 +1,12 @@
-import math
+import os
 
 from sqlalchemy import select, update, delete, func, or_
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.filters import UserFilter
 from application.account.models import User
 from application.account.schemas.user_schemas import UserReadSchemaShort
 from database.db import async_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql.array import CONTAINS
-import os
 
 
 async def get_user(username: str):
