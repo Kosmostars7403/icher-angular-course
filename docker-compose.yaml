@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+    postgres:
+        container_name: angular_course_postgres
+        build: ./database
+
+
+        environment:
+          POSTGRES_USER: ${POSTGRES_USER}
+          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+          POSTGRES_DB: ${POSTGRES_DB}
+
+        env_file:
+          - .env
+
+        ports:
+          - "127.0.0.1:5433:5432"
+
+        volumes:
+          - angular_course_postgres_data:/data
+
+        restart: always
+
+    backend:
+        container_name: angular_course_backend
+        build: .
+
+        env_file:
+          - .env
+
+        command: bash -c "alembic upgrade head && uvicorn app:app --reload --host 0.0.0.0 --port 8000"
+
+        ports:
+          - 8000:8000
+
+        depends_on:
+          - postgres
+
+        restart: always
+
+volumes:
+  angular_course_postgres_data:

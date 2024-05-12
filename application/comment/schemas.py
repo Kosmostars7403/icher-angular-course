@@ -1,0 +1,33 @@
+from datetime import datetime
+
+from pydantic import BaseModel, alias_generators, ConfigDict
+
+from application.account.schemas.user_schemas import UserReadSchema, UserReadSchemaShort, UserReadSmallSchema
+
+
+class CommentReadSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True, alias_generator=alias_generators.to_camel,
+                              populate_by_name=True)
+
+    id: int
+    text: str
+    author: UserReadSmallSchema
+    post_id: int
+    comment_id: int | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+class CommentCreateSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True, alias_generator=alias_generators.to_camel,
+                              populate_by_name=True)
+    text: str
+    author_id: int | None = None
+    post_id: int
+    comment_id: int | None = None
+
+
+class CommentUpdateSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True, alias_generator=alias_generators.to_camel,
+                              populate_by_name=True)
+    text: str | None = None
