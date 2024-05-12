@@ -1,7 +1,7 @@
 import os
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status, File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, status, File, UploadFile, HTTPException, Query
 from fastapi_filter import FilterDepends
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.utils import disable_installed_extensions_check
@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user, upload_image_in_db, get_all_users, get_user_by_id, \
     get_user, get_user_subscriptions
-from application.account.filters import UserFilter
+from application.account.filters import UserFilter, QueryParams
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
 from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort, SubscriptionsSchema
@@ -67,10 +67,14 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
 
 @router.get('/accounts', status_code=status.HTTP_200_OK)
 async def get_accounts(current_user: Annotated[User, Depends(get_current_active_user)],
+
                        stack: str = '',
+                       first_name: str = Query(alias='firstName', default=''),
+                       last_name: str = Query(alias='lastName', default=''),
                        user_filter: UserFilter = FilterDepends(UserFilter),
                        session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
-    return paginate(await get_all_users(user=current_user, session=session, user_filter=user_filter, stack=stack))
+    return paginate(await get_all_users(user=current_user, session=session, user_filter=user_filter, stack=stack,
+                                        first_name=first_name, last_name=last_name))
 
 
 @router.get('/{account_id}', status_code=status.HTTP_200_OK)
