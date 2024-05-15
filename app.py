@@ -11,7 +11,9 @@ from fastapi_pagination import add_pagination
 
 
 app = FastAPI(
-    title='AngularCourse'
+    title='AngularCourse',
+    openapi_url='/yt-course/openapi.json',
+    docs_url='/yt-course/docs',
 )
 add_pagination(app)
 
