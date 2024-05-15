@@ -8,11 +8,12 @@ from application.comment.router import router as comment_router
 from application.post.router import router as post_router
 
 from fastapi_pagination import add_pagination
+from settings import settings
 
 
 app = FastAPI(
     title='AngularCourse',
-    root_path='/yt-course',
+    root_path=settings.ROOT_URL,
 )
 add_pagination(app)
 
