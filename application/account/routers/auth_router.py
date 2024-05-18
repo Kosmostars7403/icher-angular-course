@@ -65,6 +65,8 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     if not user_data['username']:
         user_data['username'] = await generate_unique_username()
 
+    user_data['subscriptions'] = [123, 124, 125, 126, 127]  # add test persons to subs
+
     user = User(**user_data)
 
     session.add(user)

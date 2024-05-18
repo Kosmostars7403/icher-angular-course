@@ -53,8 +53,8 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
                      session: AsyncSession = Depends(get_async_session)):
 
     image_content = await image.read()
-
-    filename = f"{current_user.username}.jpg"
+    image_type = image.filename.split('.')[-1]
+    filename = f"{current_user.username}.{image_type}"
 
     avatar_url = os.path.join(IMAGE_DIR, filename)
 
