@@ -17,7 +17,7 @@ REFRESH_TOKEN_TYPE = 'refresh'
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="yt-course/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.ROOT_URL}/auth/token")
 
 
 def create_jwt(token_type: str, token_data: dict, expires_delta: timedelta | None = timedelta(minutes=15)) -> str:

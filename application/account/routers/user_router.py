@@ -8,7 +8,7 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user, upload_image_in_db, get_all_users, get_user_by_id, \
-    get_user, get_user_subscriptions
+    get_user, get_user_subscriptions, get_test_users
 from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
@@ -22,6 +22,11 @@ router = APIRouter(
     tags=['account'],
     prefix='/account',
 )
+
+
+@router.get('/test_accounts', response_model=list[UserReadSchemaShort], status_code=status.HTTP_200_OK)
+async def get_test_accounts(session: AsyncSession = Depends(get_async_session)):
+    return await get_test_users(session=session)
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=UserReadSchema)
@@ -68,7 +73,6 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
 
 @router.get('/accounts', status_code=status.HTTP_200_OK)
 async def get_accounts(current_user: Annotated[User, Depends(get_current_active_user)],
-
                        stack: str = '',
                        first_name: str = Query(alias='firstName', default=''),
                        last_name: str = Query(alias='lastName', default=''),

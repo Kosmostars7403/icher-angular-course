@@ -3,8 +3,8 @@ from application.account.random_generator import password_generator
 from application.account.validation import get_password_hash
 from database.db import async_session
 from application.account.models import User
-from application.post.models import Post
-from application.comment.models import Comment
+from application.post.models import Post  # Не удалять
+from application.comment.models import Comment  # Не удалять
 from sqlalchemy import select
 
 
