@@ -1,21 +1,22 @@
+import os
 from typing import Annotated
 
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, UploadFile, File
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.post.schemas import PostReadSchema, PostCreateSchema, PostUpdateSchema
-from .crud import get_all_posts, create_post as crud_create_post, update_post as crud_update_post, \
-    delete_post as crud_delete_post, get_post_by_id, get_posts_by_subscriptions
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from database.db import get_async_session
+from .crud import get_all_posts, create_post as crud_create_post, update_post as crud_update_post, \
+    delete_post as crud_delete_post, get_post_by_id, get_posts_by_subscriptions, upload_image_in_db_post
 
 router = APIRouter(
     tags=['post'],
     prefix='/post'
 )
 
+IMAGE_POST_DIR = 'static/posts'
 
 @router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema],
             dependencies=[Depends(get_current_active_user)])
@@ -74,3 +75,21 @@ async def delete_post(post_id: int, user: Annotated[User, Depends(get_current_ac
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='This is not your post')
 
     await crud_delete_post(post_id=post_id, session=session)
+
+
+@router.post('/upload_image/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema)
+async def load_image(post_id: int, current_user: Annotated[User, Depends(get_current_active_user)], image: UploadFile = File(...),
+                     session: AsyncSession = Depends(get_async_session)):
+
+    image_content = await image.read()
+    image_type = image.filename.split('.')[-1]
+    filename = f"{current_user.username}_{post_id}.{image_type}"
+
+    post_image_url = os.path.join(IMAGE_POST_DIR, filename)
+
+    with open(post_image_url, 'wb') as f:
+        f.write(image_content)
+
+    await upload_image_in_db_post(image_url=post_image_url, post_id=post_id, session=session)
+
+    return await get_post_by_id(post_id=post_id, session=session)

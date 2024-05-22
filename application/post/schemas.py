@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, ConfigDict, alias_generators
+from pydantic import BaseModel, ConfigDict, alias_generators
 
-from application.account.schemas.user_schemas import UserReadSchema, UserReadSchemaShort
+from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.comment.schemas import CommentReadSchema
 
 
@@ -14,6 +14,7 @@ class PostReadSchema(BaseModel):
     title: str
     content: str | None = ''
     author: UserReadSchemaShort
+    images: list[str] | None = None
     created_at: datetime
     updated_at: datetime | None = None
 
@@ -32,3 +33,4 @@ class PostCreateSchema(BaseModel):
 class PostUpdateSchema(BaseModel):
     title: str | None = None
     content: str | None = None
+

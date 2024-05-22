@@ -1,12 +1,13 @@
 import os
 
-from sqlalchemy import select, update, delete, func, or_, any_, and_
+from sqlalchemy import select, update, delete, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import ARRAY
+
 from application.account.filters import UserFilter
 from application.account.models import User
 from application.account.schemas.user_schemas import UserReadSchemaShort
 from database.db import async_session
+
 
 async def get_user(username: str):
     async with async_session() as session:
@@ -15,6 +16,8 @@ async def get_user(username: str):
         user = user.scalar_one_or_none()
 
         return user
+
+
 async def update_user(user: User, data: dict, session: AsyncSession):
 
     stmt = update(User).where(User.id == user.id).values(**data)

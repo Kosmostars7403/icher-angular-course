@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.models import User
@@ -47,6 +49,23 @@ async def update_post(post_id: int, post: PostUpdateSchema, session: AsyncSessio
 
 
 async def delete_post(post_id: int, session: AsyncSession):
+    post = await get_post_by_id(post_id, session)
     stmt = delete(Post).where(Post.id == post_id)
+
+    if os.path.exists(post.images):
+        for image in post.images:
+            os.remove(image)
+
     await session.execute(stmt)
     await session.commit()
+
+
+async def upload_image_in_db_post(post_id: int, image_url: str, session: AsyncSession):
+    post = await get_post_by_id(post_id, session)
+    images = post.images
+
+    if image_url not in images:
+        images.append(image_url)
+        stmt = update(Post).where(Post.id == post_id).values(images=images)
+        await session.execute(stmt)
+        await session.commit()

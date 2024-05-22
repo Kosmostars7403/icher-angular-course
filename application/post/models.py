@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Integer, Date, ForeignKey
+from sqlalchemy import String, Integer, Date, ForeignKey, ARRAY, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
@@ -18,6 +18,7 @@ class Post(Base):
     author_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     title: Mapped[str] = mapped_column(String(255))
     content: Mapped[str | None] = mapped_column(String)
+    images: ARRAY | None = Column(ARRAY(String), default=[])
     created_at: Mapped[Date] = mapped_column(Date, default=datetime.utcnow)
     updated_at: Mapped[Date | None] = mapped_column(Date, default=datetime.utcnow, onupdate=datetime.utcnow)
 
