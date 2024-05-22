@@ -63,6 +63,9 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
 
     avatar_url = os.path.join(IMAGE_DIR, filename)
 
+    if not os.path.exists(IMAGE_DIR):
+        os.mkdir(IMAGE_DIR)
+
     with open(avatar_url, 'wb') as f:
         f.write(image_content)
 

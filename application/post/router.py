@@ -87,6 +87,9 @@ async def load_image(post_id: int, current_user: Annotated[User, Depends(get_cur
 
     post_image_url = os.path.join(IMAGE_POST_DIR, filename)
 
+    if not os.path.exists(IMAGE_POST_DIR):
+        os.mkdir(IMAGE_POST_DIR)
+
     with open(post_image_url, 'wb') as f:
         f.write(image_content)
 
