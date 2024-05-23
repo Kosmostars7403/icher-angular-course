@@ -1,13 +1,12 @@
 import os
 
+from sqlalchemy import select, update, insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from application.account.models import User
 from application.comment.models import Comment
 from application.post.models import Post
-from sqlalchemy import select, update, delete, insert
-from sqlalchemy.orm import selectinload
-
 from application.post.schemas import PostCreateSchema, PostUpdateSchema
 
 
@@ -50,14 +49,29 @@ async def update_post(post_id: int, post: PostUpdateSchema, session: AsyncSessio
 
 async def delete_post(post_id: int, session: AsyncSession):
     post = await get_post_by_id(post_id, session)
-    stmt = delete(Post).where(Post.id == post_id)
 
-    if os.path.exists(post.images):
+    if post.images:
         for image in post.images:
-            os.remove(image)
+            if os.path.exists(image):
+                os.remove(image)
 
-    await session.execute(stmt)
+    await session.delete(post)
     await session.commit()
+
+
+async def delete_image_from_post(post_id: int, image_url: str, session: AsyncSession):
+    post = await get_post_by_id(post_id, session)
+    images = post.images
+
+    if image_url in images:
+        images.remove(image_url)
+
+        stmt = update(Post).where(Post.id == post_id).values(images=images)
+        await session.execute(stmt)
+        await session.commit()
+
+        if os.path.exists(image_url):
+            os.remove(image_url)
 
 
 async def upload_image_in_db_post(post_id: int, image_url: str, session: AsyncSession):

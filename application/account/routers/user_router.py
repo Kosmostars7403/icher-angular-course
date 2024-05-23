@@ -8,7 +8,7 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user, upload_image_in_db, get_all_users, get_user_by_id, \
-    get_user, get_user_subscriptions, get_test_users
+    get_user, get_user_subscriptions, get_test_users, delete_user_image
 from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
@@ -72,6 +72,15 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
     await upload_image_in_db(user=current_user, avatar_url=avatar_url, session=session)
 
     return await get_user(current_user.username)
+
+
+@router.delete('/delete_image', status_code=status.HTTP_202_ACCEPTED, response_model=UserReadSchema)
+async def delete_my_image(current_user: Annotated[User, Depends(get_current_active_user)],
+                          session: AsyncSession = Depends(get_async_session)):
+
+    await delete_user_image(user=current_user, session=session)
+    return await get_user(current_user.username)
+
 
 
 @router.get('/accounts', status_code=status.HTTP_200_OK)

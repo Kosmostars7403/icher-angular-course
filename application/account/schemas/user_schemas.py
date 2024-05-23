@@ -49,9 +49,11 @@ class UserUpdateSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
                               arbitrary_types_allowed=True, from_attributes=True)
 
-    stack: list[str] | None = []
-    city: str | None = ''
-    description: str | None = ''
+    first_name: str | None = None
+    last_name: str | None = None
+    stack: list[str] | None = None
+    city: str | None = None
+    description: str | None = None
 
 
 class UserInDBSchema(UserReadSchema):

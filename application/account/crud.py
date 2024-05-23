@@ -6,6 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.account.filters import UserFilter
 from application.account.models import User
 from application.account.schemas.user_schemas import UserReadSchemaShort
+from application.comment.models import Comment
+from application.message.models import Message
+from application.personal_chat.models import PersonalChat
+from application.post.models import Post
 from database.db import async_session
 
 
@@ -32,11 +36,34 @@ async def upload_image_in_db(user: User, avatar_url: str, session: AsyncSession)
 
 
 async def delete_user(user: User, session: AsyncSession):
+    stmt = delete(Message).where(Message.user_from_id == user.id)
+    await session.execute(stmt)
+
+    stmt = delete(Comment).where(Comment.author_id == user.id)
+    await session.execute(stmt)
+
+    stmt = delete(Post).where(Post.author_id == user.id)
+    await session.execute(stmt)
+
+    stmt = delete(PersonalChat).where(PersonalChat.user_first_id == user.id or PersonalChat.user_second_id == user.id)
+    await session.execute(stmt)
 
     stmt = delete(User).where(User.id == user.id)
 
-    if os.path.exists(user.avatar_url):
-        os.remove(user.avatar_url)
+    if user.avatar_url is not None:
+        if os.path.exists(user.avatar_url):
+            os.remove(user.avatar_url)
+
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def delete_user_image(user: User, session: AsyncSession):
+    stmt = update(User).where(User.id == user.id).values(avatar_url=None)
+
+    if user.avatar_url is not None:
+        if os.path.exists(user.avatar_url):
+            os.remove(user.avatar_url)
 
     await session.execute(stmt)
     await session.commit()

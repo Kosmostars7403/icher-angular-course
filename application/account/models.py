@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from application.post.models import Post
     from application.comment.models import Comment
 
+
 class User(Base):
     __tablename__ = 'user'
 

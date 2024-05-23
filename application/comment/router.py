@@ -23,10 +23,16 @@ async def create_comment(comment: CommentCreateSchema, user: Annotated[User, Dep
     return await crud_create_comment(comment=comment, session=session)
 
 
-@router.get('/{comment_id}', status_code=status.HTTP_200_OK, response_model=list[CommentReadSchema],
+@router.get('/{comment_id}', status_code=status.HTTP_200_OK, response_model=CommentReadSchema,
             dependencies=[Depends(get_current_active_user)])
 async def get_comment(comment_id: int, session: AsyncSession = Depends(get_async_session)):
-    return await get_comment_by_id(comment_id=comment_id, session=session)
+
+    comment = await get_comment_by_id(comment_id=comment_id, session=session)
+
+    if comment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Comment not found')
+
+    return comment
 
 
 @router.patch('/{comment_id}', status_code=status.HTTP_202_ACCEPTED)
