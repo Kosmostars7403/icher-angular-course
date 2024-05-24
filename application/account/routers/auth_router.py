@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.account.crud import update_user, get_user_by_id
 from application.account.helpers import get_current_user_from_refresh, get_current_active_user
 from application.account.jwt import create_access_token, create_refresh_token
 from application.account.models import User
@@ -56,11 +57,20 @@ async def logout():
     return {'message': 'logout'}
 
 
-@router.post('/register')
+@router.post('/register', include_in_schema=False)
 async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = Depends(get_async_session)):
     user_data = new_user.model_dump()
+
     password = await password_generator()
     user_data['hashed_password'] = get_password_hash(password)
+
+    if user := await get_user_by_id(new_user.id, session):
+        await update_user(user, {'hashed_password': user_data['hashed_password']}, session)
+        upd_user = await get_user_by_id(new_user.id, session)
+        return {
+            'username': upd_user.username,
+            'password': password
+        }
 
     if not user_data['username']:
         user_data['username'] = await generate_unique_username()
@@ -68,7 +78,6 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     user_data['subscriptions'] = [123, 124, 125, 126, 127]  # add test persons to subs
 
     user = User(**user_data)
-
     session.add(user)
 
     await session.commit()
