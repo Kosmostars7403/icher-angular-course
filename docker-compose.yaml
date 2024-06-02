@@ -37,7 +37,11 @@ services:
         depends_on:
           - postgres
 
+        volumes:
+          - angular_course_static:/backend/static
+
         restart: always
 
 volumes:
   angular_course_postgres_data:
+  angular_course_static:
