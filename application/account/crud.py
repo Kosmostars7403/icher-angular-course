@@ -112,7 +112,7 @@ async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSessi
 
 
 async def get_test_users(session: AsyncSession):
-    stmt = select(User).filter(User.is_active).order_by(User.id)
+    stmt = select(User).filter(User.is_active and User.id.in_([123, 124, 125, 126, 127])).order_by(User.id)
     return (await session.execute(stmt)).scalars().all()
 
 

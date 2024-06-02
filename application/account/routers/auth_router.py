@@ -57,7 +57,7 @@ async def logout():
     return {'message': 'logout'}
 
 
-@router.post('/register', include_in_schema=False)
+@router.post('/register', include_in_schema=True)
 async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = Depends(get_async_session)):
     user_data = new_user.model_dump()
 
@@ -67,6 +67,7 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     if user := await get_user_by_id(new_user.id, session):
         await update_user(user, {'hashed_password': user_data['hashed_password']}, session)
         upd_user = await get_user_by_id(new_user.id, session)
+
         return {
             'username': upd_user.username,
             'password': password

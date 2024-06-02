@@ -25,6 +25,11 @@ class UserReadSchemaShort(UserReadSmallSchema):
     is_active: bool | None = True
     stack: list[str] | None = []
     city: str | None = ''
+    description: str | None = ''
+
+    @field_validator('description', mode='before')
+    def get_150_symbols(cls, v):
+        return v[:150] if v else ''
 
 
 class SubscriptionsSchema(BaseModel):
@@ -33,6 +38,10 @@ class SubscriptionsSchema(BaseModel):
 
 class UserReadSchema(UserReadSchemaShort):
     description: str | None = ''
+
+    @field_validator('description', mode='before')
+    def get_full_length(cls, v):
+        return v
 
 
 class UserCreateSchema(BaseModel):
