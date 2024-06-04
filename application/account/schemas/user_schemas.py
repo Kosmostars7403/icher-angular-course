@@ -8,14 +8,7 @@ class UserReadSmallSchema(BaseModel):
     id: int = Field(validation_alias='tg_id')
     username: str
     avatar_url: str | None = None
-    subscriptions_amount: int | None = Field(validation_alias='subscriptions')
-
-    @field_validator('subscriptions_amount', mode='before')
-    def get_list_length(cls, v):
-        if isinstance(v, list):
-            return len(v)
-        elif isinstance(v, int):
-            return v
+    subscribers_amount: int | None = 0
 
 
 class UserReadSchemaShort(UserReadSmallSchema):

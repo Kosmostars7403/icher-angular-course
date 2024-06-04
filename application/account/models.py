@@ -1,8 +1,12 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from database.db import Base
 from typing import TYPE_CHECKING
+
+from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, Date, ARRAY, select, func
+from sqlalchemy.dialects.postgresql.array import CONTAINS
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from database.db import Base
 
 IMAGE_DIR = 'static/avatars'
 

@@ -8,7 +8,7 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, delete_user, upload_image_in_db, get_all_users, get_user_by_id, \
-    get_user, get_user_subscriptions, get_test_users, delete_user_image
+    get_user, get_user_subscriptions, get_test_users, delete_user_image, get_subscribers as get_user_subscribers
 from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
@@ -82,7 +82,6 @@ async def delete_my_image(current_user: Annotated[User, Depends(get_current_acti
     return await get_user(current_user.username)
 
 
-
 @router.get('/accounts', status_code=status.HTTP_200_OK)
 async def get_accounts(current_user: Annotated[User, Depends(get_current_active_user)],
                        stack: str = '',
@@ -139,7 +138,24 @@ async def unsubscribe(account_id: int, current_user: Annotated[User, Depends(get
         return {'message': f'You are not subscribed'}
 
 
-@router.get('/subscriptions/', status_code=status.HTTP_200_OK, response_model=SubscriptionsSchema)
+@router.get('/subscriptions/', status_code=status.HTTP_200_OK)
 async def get_subscriptions(current_user: Annotated[User, Depends(get_current_active_user)],
-                            session: AsyncSession = Depends(get_async_session)):
-    return await get_user_subscriptions(user=current_user, session=session)
+                            stack: str = '',
+                            first_name: str = Query(alias='firstName', default=''),
+                            last_name: str = Query(alias='lastName', default=''),
+                            user_filter: UserFilter = FilterDepends(UserFilter),
+                            session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
+    return paginate(
+        await get_user_subscriptions(user=current_user, session=session, user_filter=user_filter, stack=stack,
+                                     first_name=first_name, last_name=last_name))
+
+
+@router.get('/subscribers/', status_code=status.HTTP_200_OK)
+async def get_subscribers(current_user: Annotated[User, Depends(get_current_active_user)],
+                          stack: str = '',
+                          first_name: str = Query(alias='firstName', default=''),
+                          last_name: str = Query(alias='lastName', default=''),
+                          user_filter: UserFilter = FilterDepends(UserFilter),
+                          session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
+    return paginate(await get_user_subscribers(user=current_user, session=session, user_filter=user_filter, stack=stack,
+                                               first_name=first_name, last_name=last_name))

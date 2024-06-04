@@ -1,7 +1,9 @@
 import os
 
 from sqlalchemy import select, update, delete, func, or_, and_
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql.array import CONTAINS
 
 from application.account.filters import UserFilter
 from application.account.models import User
@@ -18,6 +20,9 @@ async def get_user(username: str):
         stmt = select(User).filter(User.username == username)
         user = await session.execute(stmt)
         user = user.scalar_one_or_none()
+
+        if user:
+            user = await get_user_by_id(user.id, session)
 
         return user
 
@@ -71,8 +76,65 @@ async def delete_user_image(user: User, session: AsyncSession):
 
 async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSession, stack: str, first_name: str,
                         last_name: str):
+
     stmt = select(User).filter(User.is_active and User.id != user.id)
 
+    return await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
+
+
+async def get_subscribers(user_filter: UserFilter, user: User, session: AsyncSession, stack: str, first_name: str,
+                          last_name: str):
+    stmt = select(User).filter(User.is_active).filter(CONTAINS(User.subscriptions, [user.id]))
+    return await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
+
+
+async def get_test_users(session: AsyncSession):
+    stmt = select(User).filter(User.is_active and User.id.in_([123, 124, 125, 126, 127])).order_by(User.id)
+
+    data = (await session.execute(stmt)).scalars().all()
+
+    for user in data:
+        stmt = select(func.count()).where(CONTAINS(User.subscriptions, [user.id]))
+        result = await session.execute(stmt)
+
+        user.subscribers_amount = result.first()[0]
+
+    return data
+
+
+async def get_user_by_id(user_id: int, session: AsyncSession):
+    subquery = select(func.count()).where(CONTAINS(User.subscriptions, [user_id])).subquery(
+        'subscribers_amount')
+
+    stmt = select(User, subquery).where(User.id == user_id)
+
+    result = await session.execute(stmt)
+
+    result = result.first()
+
+    if result is None:
+        return None
+
+    user, subscribers_amount = result
+
+    user.subscribers_amount = subscribers_amount
+
+    return user
+
+
+async def get_user_subscriptions(user_filter: UserFilter, user: User, session: AsyncSession, stack: str,
+                                 first_name: str,
+                                 last_name: str):
+
+    stmt = select(User).filter(User.is_active)
+
+    filtered_data = await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
+
+    return [result_user for result_user in filtered_data if result_user.id in user.subscriptions]
+
+
+async def filter_accounts_by_tgrm(stmt, user_filter: UserFilter, session: AsyncSession, stack: str, first_name: str,
+                                  last_name: str):
     similarity_threshold = 0.3
 
     if stack:
@@ -105,26 +167,15 @@ async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSessi
 
     query_filter = user_filter.filter(user_filter.sort(stmt))
 
+    data = (await session.execute(query_filter)).scalars().all()
+
+    for user in data:
+        stmt = select(func.count()).where(CONTAINS(User.subscriptions, [user.id]))
+        result = await session.execute(stmt)
+
+        user.subscribers_amount = result.first()[0]
+
     filtered_data = [UserReadSchemaShort.model_validate(user) for user in
-                     (await session.execute(query_filter)).scalars().all()]
+                     data]
 
     return filtered_data
-
-
-async def get_test_users(session: AsyncSession):
-    stmt = select(User).filter(User.is_active and User.id.in_([123, 124, 125, 126, 127])).order_by(User.id)
-    return (await session.execute(stmt)).scalars().all()
-
-
-async def get_user_by_id(user_id: int, session: AsyncSession):
-    stmt = select(User).where(User.id == user_id)
-    user = await session.scalar(stmt)
-
-    return user
-
-
-async def get_user_subscriptions(user: User, session: AsyncSession):
-
-    user.subscriptions = [await get_user_by_id(user_id, session) for user_id in user.subscriptions]
-
-    return user
