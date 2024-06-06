@@ -16,6 +16,7 @@ RUN poetry config virtualenvs.create false && poetry install --no-interaction --
 COPY . .
 
 RUN mkdir -p static
+
 RUN cp -r images/* static
 
 EXPOSE 8000

@@ -19,6 +19,12 @@ router = APIRouter(
 
 IMAGE_POST_DIR = 'static/posts'
 
+IMAGE_EXTENSIONS = [
+    'bmp', 'gif', 'ico', 'ief', 'jpe', 'jpeg', 'jpg',
+    'pbm', 'pgm', 'png', 'pnm', 'ppm', 'ras', 'rgb',
+    'svg', 'tif', 'tiff', 'xbm', 'xpm', 'xwd'
+]
+
 
 @router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema],
             dependencies=[Depends(get_current_active_user)])
@@ -87,6 +93,11 @@ async def load_image(post_id: int, current_user: Annotated[User, Depends(get_cur
     index = len(old_post.images)
     image_content = await image.read()
     image_type = image.filename.split('.')[-1]
+
+    if image_type not in IMAGE_EXTENSIONS:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'Image type {image_type} is not supported')
+
     filename = f"{current_user.username}_{post_id}_{index}.{image_type}"
 
     post_image_url = os.path.join(IMAGE_POST_DIR, filename)
