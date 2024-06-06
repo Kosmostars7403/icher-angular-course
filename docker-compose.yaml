@@ -45,3 +45,9 @@ services:
 volumes:
   angular_course_postgres_data:
   angular_course_static:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/static
+

@@ -23,6 +23,11 @@ router = APIRouter(
     prefix='/account',
 )
 
+IMAGE_EXTENSIONS = [
+    'bmp', 'gif', 'ico', 'ief', 'jpe', 'jpeg', 'jpg',
+    'pbm', 'pgm', 'png', 'pnm', 'ppm', 'ras', 'rgb',
+    'svg', 'tif', 'tiff', 'xbm', 'xpm', 'xwd'
+]
 
 @router.get('/test_accounts', response_model=list[UserReadSchemaShort], status_code=status.HTTP_200_OK)
 async def get_test_accounts(session: AsyncSession = Depends(get_async_session)):
@@ -59,6 +64,11 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
 
     image_content = await image.read()
     image_type = image.filename.split('.')[-1]
+
+    if image_type not in IMAGE_EXTENSIONS:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f'Image type {image_type} is not supported')
+
     filename = f"{current_user.username}.{image_type}"
 
     avatar_url = os.path.join(IMAGE_DIR, filename)
