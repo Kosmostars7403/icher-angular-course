@@ -19,8 +19,9 @@ class Comment(Base):
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey('post.id'))
     comment_id: Mapped[int | None] = mapped_column(Integer, ForeignKey('comment.id'))
-    created_at: Mapped[Date] = mapped_column(TIMESTAMP, default=datetime.utcnow)
-    updated_at: Mapped[Date | None] = mapped_column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     post: Mapped['Post'] = relationship(back_populates='comments')
     author: Mapped['User'] = relationship(back_populates='comments')
+    comments: Mapped[list['Comment']] = relationship(remote_side=[comment_id])

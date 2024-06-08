@@ -7,7 +7,7 @@ from application.comment.schemas import CommentUpdateSchema, CommentCreateSchema
 
 
 async def get_comment_by_id(comment_id: int, session: AsyncSession):
-    return await session.get(Comment, comment_id, options=[selectinload(Comment.author)])
+    return await session.get(Comment, comment_id, options=[selectinload(Comment.author),selectinload(Comment.comments)])
 
 
 async def update_comment(comment_id: int, comment: CommentUpdateSchema, session: AsyncSession):

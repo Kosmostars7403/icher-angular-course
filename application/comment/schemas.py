@@ -18,6 +18,11 @@ class CommentReadSchema(BaseModel):
     updated_at: datetime | None = None
 
 
+class CommentReadWithChildSchema(CommentReadSchema):
+    comments: list[CommentReadSchema]
+
+
+
 class CommentCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True, alias_generator=alias_generators.to_camel,
                               populate_by_name=True)

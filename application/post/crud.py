@@ -11,14 +11,15 @@ from application.post.schemas import PostCreateSchema, PostUpdateSchema
 
 
 async def get_post_by_id(post_id: int, session: AsyncSession):
-    return await session.get(Post, post_id, options=[selectinload(Post.comments).options(selectinload(Comment.author)),
+    return await session.get(Post, post_id, options=[
+        selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
                                                                                          selectinload(Post.author)
                                                      ])
 
 
 async def get_all_posts(session: AsyncSession):
     stmt = select(Post).options(
-        selectinload(Post.comments).options(selectinload(Comment.author)),
+        selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
         selectinload(Post.author),
     )
     return (await session.execute(stmt)).scalars().all()
@@ -26,7 +27,7 @@ async def get_all_posts(session: AsyncSession):
 
 async def get_posts_by_subscriptions(user: User, session: AsyncSession):
     stmt = select(Post).where(Post.author_id.in_(user.subscriptions)).options(
-        selectinload(Post.comments).options(selectinload(Comment.author)),
+        selectinload(Post.comments).options(selectinload(Comment.author),selectinload(Comment.comments)),
         selectinload(Post.author)
     )
     return (await session.execute(stmt)).scalars().all()

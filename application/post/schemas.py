@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, alias_generators
 
 from application.account.schemas.user_schemas import UserReadSchemaShort
-from application.comment.schemas import CommentReadSchema
+from application.comment.schemas import CommentReadSchema, CommentReadWithChildSchema
 
 
 class PostReadSchema(BaseModel):
@@ -18,7 +18,7 @@ class PostReadSchema(BaseModel):
     created_at: datetime
     updated_at: datetime | None = None
 
-    comments: list[CommentReadSchema] | None = []
+    comments: list[CommentReadWithChildSchema] | None = []
 
 
 class PostCreateSchema(BaseModel):

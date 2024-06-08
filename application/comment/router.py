@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.helpers import get_current_active_user
 from application.account.models import User
-from application.comment.schemas import CommentReadSchema, CommentUpdateSchema, CommentCreateSchema
+from application.comment.schemas import CommentReadSchema, CommentUpdateSchema, CommentCreateSchema, CommentReadWithChildSchema
 from database.db import get_async_session
 from .crud import (get_comment_by_id, update_comment as crud_update_comment, delete_comment as crud_delete_comment,
                    create_comment as crud_create_comment)
@@ -23,7 +23,7 @@ async def create_comment(comment: CommentCreateSchema, user: Annotated[User, Dep
     return await crud_create_comment(comment=comment, session=session)
 
 
-@router.get('/{comment_id}', status_code=status.HTTP_200_OK, response_model=CommentReadSchema,
+@router.get('/{comment_id}', status_code=status.HTTP_200_OK, response_model=CommentReadWithChildSchema,
             dependencies=[Depends(get_current_active_user)])
 async def get_comment(comment_id: int, session: AsyncSession = Depends(get_async_session)):
 
