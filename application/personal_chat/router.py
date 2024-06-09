@@ -53,7 +53,8 @@ async def get_chats(current_user: Annotated[User, Depends(get_current_active_use
         chats_schemas.append(PersonalChatReadShortSchema(
             id=chat.id,
             user_from=chat.user_first if chat.user_first_id != current_user.id else chat.user_second,
-            message=(chat.messages[-1].text[:100] if len(chat.messages) > 0 else None)
+            message=(chat.messages[-1].text[:100] if len(chat.messages) > 0 else None),
+            created_at=chat.messages[-1].created_at,
         ))
 
     return chats_schemas

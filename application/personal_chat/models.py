@@ -19,6 +19,4 @@ class PersonalChat(Base):
 
     user_first: Mapped['User'] = relationship(foreign_keys=[user_first_id])
     user_second: Mapped['User'] = relationship(foreign_keys=[user_second_id])
-    messages: Mapped[list[Message]] = relationship(back_populates='personal_chat')
-
-
+    messages: Mapped[list[Message]] = relationship(back_populates='personal_chat', order_by='Message.created_at')

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, alias_generators
 
 from application.account.schemas.user_schemas import UserReadSchemaShort
@@ -10,6 +12,7 @@ class PersonalChatReadShortSchema(BaseModel):
     id: int
     user_from: UserReadSchemaShort
     message: str | None = None
+    created_at: datetime
 
 
 class PersonalChatReadSchema(BaseModel):
