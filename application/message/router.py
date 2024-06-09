@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.message.crud import insert_message, get_message, update_message, delete_message
+from application.personal_chat.crud import get_personal_chat
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.message.schemas import MessageReadSchema
@@ -21,6 +22,12 @@ router = APIRouter(
 async def send_message(chat_id: int, message: str, current_user: Annotated[User, Depends(get_current_active_user)],
                        session: AsyncSession = Depends(get_async_session)):
     message_id = await insert_message(chat_id=chat_id, text=message, user_id=current_user.id, session=session)
+
+    personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
+
+    bots_ids = [123, 124, 125, 126, 127]
+    if personal_chat.user_first_id in bots_ids:
+        await insert_message(chat_id=chat_id, text=message, user_id=personal_chat.user_first_id, session=session)
 
     return await get_message(message_id=message_id, session=session)
 
