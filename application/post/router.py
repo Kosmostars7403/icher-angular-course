@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.helpers import get_current_active_user
 from application.account.models import User
-from application.post.schemas import PostReadSchema, PostCreateSchema, PostUpdateSchema
+from application.community.crud import get_community_by_id
+from application.community.validators import validate_community_admin
+from application.post.schemas import PostReadSchema, PostCreateSchema, PostUpdateSchema, CommunityReadSchema
 from database.db import get_async_session
-from .crud import get_all_posts, create_post as crud_create_post, update_post as crud_update_post, \
+from application.post.crud import get_all_posts, create_post as crud_create_post, update_post as crud_update_post, \
     delete_post as crud_delete_post, get_post_by_id, get_posts_by_subscriptions, upload_image_in_db_post, \
     delete_image_from_post
 
@@ -29,12 +31,29 @@ IMAGE_EXTENSIONS = [
 @router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema],
             dependencies=[Depends(get_current_active_user)])
 async def get_posts(session: AsyncSession = Depends(get_async_session)):
-    return await get_all_posts(session=session)
+
+    models = []
+
+    for post in await get_all_posts(session=session):
+        if post.community_id:
+            model = PostReadSchema.model_validate(post)
+            model.author = CommunityReadSchema.model_validate(post.community)
+            models.append(model)
+        else:
+            models.append(post)
+
+    return models
+
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostReadSchema)
 async def create_post(post: PostCreateSchema, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
+
+    if post.community_id:
+        community = await get_community_by_id(community_id=post.community_id, session=session)
+        await validate_community_admin(user=user, community=community)
+
     post.author_id = user.id
     return await crud_create_post(post=post, session=session)
 
@@ -43,7 +62,17 @@ async def create_post(post: PostCreateSchema, user: Annotated[User, Depends(get_
 async def get_my_subscriptions_post(user: Annotated[User, Depends(get_current_active_user)],
                                     session: AsyncSession = Depends(get_async_session)):
 
-    return await get_posts_by_subscriptions(user=user, session=session)
+    models = []
+
+    for post in await get_posts_by_subscriptions(user=user, session=session):
+        if post.community_id:
+            model = PostReadSchema.model_validate(post)
+            model.author = CommunityReadSchema.model_validate(post.community)
+            models.append(model)
+        else:
+            models.append(post)
+
+    return models
 
 
 @router.get('/{post_id}', status_code=status.HTTP_200_OK, response_model=PostReadSchema,
@@ -52,6 +81,12 @@ async def get_post(post_id: int, session: AsyncSession = Depends(get_async_sessi
     post = await get_post_by_id(post_id=post_id, session=session)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
+
+    if post.community_id:
+        model = PostReadSchema.model_validate(post)
+        model.author = CommunityReadSchema.model_validate(post.community)
+        return model
+
     return post
 
 

@@ -12,8 +12,10 @@ from settings import settings
 from application.personal_chat.models import *
 from application.message.models import *
 from application.account.models import *
+from application.like.models import *
 from application.post.models import *
 from application.comment.models import *
+from application.community.models import *
 
 DATABASE_URL = (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:"
                 f"{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}")

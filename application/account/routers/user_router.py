@@ -12,8 +12,7 @@ from application.account.crud import update_user, delete_user, upload_image_in_d
 from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
-from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort, \
-    SubscriptionsSchema
+from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort
 from database.db import get_async_session
 
 disable_installed_extensions_check()
@@ -121,6 +120,7 @@ async def get_account(account_id: int, current_user: Annotated[User, Depends(get
 @router.post('/subscribe/{account_id}', status_code=status.HTTP_202_ACCEPTED)
 async def subscribe(account_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
+
     if account_id not in current_user.subscriptions and account_id != current_user.id:
         current_user.subscriptions.append(account_id)
 

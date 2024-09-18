@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, alias_generators
+from pydantic import BaseModel
 
 
 class Token(BaseModel):

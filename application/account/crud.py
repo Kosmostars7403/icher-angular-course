@@ -1,9 +1,8 @@
 import os
 
 from sqlalchemy import select, update, delete, func, or_, and_
-from sqlalchemy.orm import joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql.array import CONTAINS
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.filters import UserFilter
 from application.account.models import User
