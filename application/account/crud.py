@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import select, update, delete, func, or_, and_
+from sqlalchemy import select, update, delete, func, or_, and_, not_
 from sqlalchemy.dialects.postgresql.array import CONTAINS
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -76,7 +76,7 @@ async def delete_user_image(user: User, session: AsyncSession):
 async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSession, stack: str, first_name: str,
                         last_name: str):
 
-    stmt = select(User).filter(User.is_active and User.id != user.id)
+    stmt = select(User).filter(User.is_active and User.id != user.id and User.username != 'test_user_ws')
 
     return await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
 

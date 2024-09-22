@@ -1,17 +1,17 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import update_user, get_user_by_id
-from application.account.helpers import get_current_user_from_refresh, get_current_active_user, \
+from application.account.helpers import get_current_active_user, \
     get_current_token_payload, get_user_by_token_sub
-from application.account.jwt import create_access_token, create_refresh_token, oauth2_scheme
+from application.account.jwt import create_access_token, create_refresh_token
 from application.account.models import User
 from application.account.random_generator import password_generator, generate_unique_username
 from application.account.schemas.token_schemas import Token, RefreshToken
-from application.account.schemas.user_schemas import UserReadSchema, UserCreateSchema
+from application.account.schemas.user_schemas import UserCreateSchema
 from application.account.validation import get_password_hash, authenticate_user, validate_token_type
 from database.db import get_async_session
 
@@ -82,7 +82,7 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     if not user_data['username']:
         user_data['username'] = await generate_unique_username()
 
-    bots_ids = [123, 124, 125, 126, 127]
+    bots_ids = [123, 124, 125, 126, 127, 500]
     user_data['subscriptions'] = bots_ids  # add test persons to subscriptions
 
     user = User(**user_data)

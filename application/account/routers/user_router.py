@@ -43,6 +43,9 @@ async def update_me(new_data: UserUpdateSchema, current_user: Annotated[User, De
                     session: AsyncSession = Depends(get_async_session)):
     new_data = new_data.model_dump(exclude_none=True)
 
+    if current_user.username == "test_user_ws":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You cannot update test user')
+
     await update_user(user=current_user, data=new_data, session=session)
 
     return await get_user(current_user.username)
@@ -51,6 +54,9 @@ async def update_me(new_data: UserUpdateSchema, current_user: Annotated[User, De
 @router.delete('/me', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_me(current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
+
+    if current_user.username == "test_user_ws":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You cannot delete test user')
 
     await delete_user(user=current_user, session=session)
 

@@ -5,13 +5,13 @@ from sqlalchemy import Column, String, Boolean, TIMESTAMP, Date, ARRAY, BigInteg
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
+from application.community.models import Community
 
 IMAGE_DIR = 'static/avatars'
 
 if TYPE_CHECKING:
     from application.post.models import Post
     from application.comment.models import Comment
-    from application.community.models import Community
 
 
 class User(Base):
