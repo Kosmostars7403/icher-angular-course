@@ -91,7 +91,14 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             data = json.loads(data)
-            await manager.send_message_to_chat(data, websocket, user=user)
+
+            if 'text' not in data.keys() and 'chat_id' not in data.keys():
+                await manager.send_personal_message(
+                    message=json.dumps({'status': 'error', 'message': 'Invalid message'}),
+                    websocket=websocket
+                )
+            else:
+                await manager.send_message_to_chat(data, websocket, user=user)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)

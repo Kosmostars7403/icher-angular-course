@@ -2,19 +2,16 @@ import os
 from typing import Annotated
 
 from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.helpers import get_current_active_user
 from application.account.models import User
-from application.account.routers.user_router import subscribe
 from application.community.crud import get_all_communities, get_community_by_id, \
     create_community as create_community_db, update_community as update_community_db, \
     delete_community as delete_community_db, delete_community_image_in_db, \
     upload_community_image_in_db
-from application.community.models import Community, ImageType
+from application.community.models import ImageType
 from application.community.schemas import CommunityReadSchema, CommunityCreateSchema, CommunityUpdateSchema
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from application.community.validators import validate_community_admin
 from database.db import get_async_session
 
