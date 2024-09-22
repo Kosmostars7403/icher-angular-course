@@ -1,15 +1,14 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.message.crud import insert_message, get_message, update_message, delete_message
+from application.message.schemas import MessageReadSchema
 from application.message.validators import is_not_my_chat
 from application.personal_chat.crud import get_personal_chat
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from application.message.schemas import MessageReadSchema
 from database.db import get_async_session
 
 router = APIRouter(
@@ -24,6 +23,8 @@ async def send_message(chat_id: int, message: str, current_user: Annotated[User,
                        session: AsyncSession = Depends(get_async_session)):
     personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
 
+    if personal_chat is None:
+        raise HTTPException(status_code=404, detail='Chat not found')
 
     if await is_not_my_chat(chat=personal_chat, user_id=current_user.id):
         raise HTTPException(status_code=403, detail="This is not your chat")

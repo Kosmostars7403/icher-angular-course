@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from application.account.models import User
 from application.comment.models import Comment
+from application.community.models import Community
 from application.post.models import Post
 from application.post.schemas import PostCreateSchema, PostUpdateSchema
 
@@ -13,14 +14,15 @@ from application.post.schemas import PostCreateSchema, PostUpdateSchema
 async def get_post_by_id(post_id: int, session: AsyncSession):
     return await session.get(Post, post_id, options=[
         selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
-                                                                                         selectinload(Post.author)
+        selectinload(Post.author), selectinload(Post.likes), selectinload(Post.community).options(selectinload(Community.admin))
                                                      ])
 
 
 async def get_all_posts(session: AsyncSession):
     stmt = select(Post).options(
         selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
-        selectinload(Post.author),
+        selectinload(Post.author), selectinload(Post.likes),
+        selectinload(Post.community).options(selectinload(Community.admin))
     )
     return (await session.execute(stmt)).scalars().all()
 
@@ -28,7 +30,8 @@ async def get_all_posts(session: AsyncSession):
 async def get_posts_by_subscriptions(user: User, session: AsyncSession):
     stmt = select(Post).where(Post.author_id.in_(user.subscriptions)).options(
         selectinload(Post.comments).options(selectinload(Comment.author),selectinload(Comment.comments)),
-        selectinload(Post.author)
+        selectinload(Post.author), selectinload(Post.likes),
+        selectinload(Post.community).options(selectinload(Community.admin))
     )
     return (await session.execute(stmt)).scalars().all()
 

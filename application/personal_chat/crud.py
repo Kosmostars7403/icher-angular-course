@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -7,9 +7,9 @@ from application.personal_chat.models import PersonalChat
 
 
 async def check_if_chat_exists(user_id: int, current_user_id: int, session: AsyncSession):
-    stmt = select(PersonalChat.id).where(
-        (PersonalChat.user_first_id == user_id and PersonalChat.user_second_id == current_user_id) or (
-                PersonalChat.user_second_id == user_id and PersonalChat.user_first_id == current_user_id))
+    stmt = select(PersonalChat.id).filter(
+        or_((PersonalChat.user_first_id == user_id and PersonalChat.user_second_id == current_user_id),
+            PersonalChat.user_second_id == user_id and PersonalChat.user_first_id == current_user_id))
 
     if chat_id := await session.scalar(stmt):
         return chat_id
@@ -28,8 +28,9 @@ async def get_personal_chat(chat_id: int, session: AsyncSession):
 
 
 async def get_personal_chats_by_user(user: User, session: AsyncSession):
-    stmt = select(PersonalChat).where(
-        (PersonalChat.user_first_id == user.id) or (PersonalChat.user_second_id == user.id)).options(
+    stmt = select(PersonalChat).filter(
+        or_(PersonalChat.user_first_id == user.id, PersonalChat.user_second_id == user.id)
+        ).options(
         selectinload(PersonalChat.messages),
         selectinload(PersonalChat.user_first),
         selectinload(PersonalChat.user_second),
@@ -39,6 +40,23 @@ async def get_personal_chats_by_user(user: User, session: AsyncSession):
 
     return chats
 
+
+async def get_unread_messages_count(user: User, session: AsyncSession):
+    stmt = select(PersonalChat).filter(
+        or_(PersonalChat.user_first_id == user.id, PersonalChat.user_second_id == user.id)
+        ).options(
+        selectinload(PersonalChat.messages),
+    )
+
+    chats = (await session.execute(stmt)).scalars().all()
+
+    count_unread = 0
+    for chat in chats:
+        for message in chat.messages:
+            if not message.is_read and message.user_from_id != user.id:
+                count_unread += 1
+
+    return count_unread
 
 async def create_personal_chat_db(user_id: int, current_user_id: int, session: AsyncSession):
 

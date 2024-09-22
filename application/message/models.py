@@ -1,11 +1,10 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, ForeignKey, String, Date, TIMESTAMP, Boolean
+from sqlalchemy import Integer, ForeignKey, String, TIMESTAMP, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from application.personal_chat.models import PersonalChat

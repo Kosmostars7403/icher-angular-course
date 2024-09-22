@@ -6,6 +6,8 @@ from application.personal_chat.router import router as personal_router
 from application.message.router import router as message_router
 from application.comment.router import router as comment_router
 from application.post.router import router as post_router
+from application.community.router import router as community_router
+from application.like.router import router as like_router
 
 from fastapi_pagination import add_pagination
 from settings import settings
@@ -35,3 +37,5 @@ app.include_router(personal_router)
 app.include_router(message_router)
 app.include_router(comment_router)
 app.include_router(post_router)
+app.include_router(community_router)
+app.include_router(like_router)

@@ -1,0 +1,105 @@
+import os
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select, insert, update, func
+from fastapi import HTTPException
+
+from application.account.models import User
+from application.comment.models import Comment
+from application.community.models import Community, ImageType
+from application.community.schemas import CommunityCreateSchema, CommunityUpdateSchema
+from application.post.models import Post
+
+
+async def get_community_by_id(community_id: int, session: AsyncSession) -> Community | None:
+    community = await session.get(Community, community_id, options=[
+        selectinload(Community.posts).options(
+            selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
+            selectinload(Post.likes)),
+        selectinload(Community.admin)])
+
+    if community is None:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    community.subscribers_amount = len([subscriber for subscriber in community.subscribers])
+
+    return community
+
+
+async def get_all_communities(name: str | None, session: AsyncSession):
+    stmt = select(Community).options(
+        selectinload(Community.posts).options(
+            selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
+            selectinload(Post.likes)),
+        selectinload(Community.admin)
+    ).order_by(Community.name)
+
+    if name:
+        stmt = stmt.filter(func.similarity(Community.name, name) > 0.3)
+
+    return (await session.execute(stmt)).scalars().all()
+
+
+async def create_community(community: CommunityCreateSchema, user: User, session: AsyncSession):
+    data = community.model_dump(exclude_none=True)
+    data['admin_id'] = user.id
+
+    stmt = insert(Community).values(**data).returning(Community.id)
+
+    community_id = await session.scalar(stmt)
+    await session.commit()
+
+    return await get_community_by_id(community_id, session)
+
+
+async def update_community(community_id: int, community: CommunityUpdateSchema, session: AsyncSession):
+    stmt = update(Community).where(Community.id == community_id).values(**community.model_dump(exclude_none=True))
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def delete_community(community_id: int, session: AsyncSession):
+    community = await get_community_by_id(community_id, session)
+
+    if community.avatar_url:
+        if os.path.exists(community.avatar_url):
+            os.remove(community.avatar_url)
+
+    if community.cover_art_url:
+        if os.path.exists(community.cover_art_url):
+            os.remove(community.cover_art_url)
+
+    await session.delete(community)
+    await session.commit()
+
+
+async def upload_community_image_in_db(community_id: int, image_url: str, img_type: ImageType, session: AsyncSession):
+    match img_type:
+        case ImageType.BANNER:
+            stmt = update(Community).where(Community.id == community_id).values(banner_url=image_url)
+        case ImageType.AVATAR:
+            stmt = update(Community).where(Community.id == community_id).values(avatar_url=image_url)
+
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def delete_community_image_in_db(community: Community, img_type: ImageType, session: AsyncSession):
+    match img_type:
+        case ImageType.BANNER:
+            stmt = update(Community).where(Community.id == community.id).values(banner_url=None)
+
+            if community.banner_url is not None:
+                if os.path.exists(community.banner_url):
+                    os.remove(community.banner_url)
+
+        case ImageType.AVATAR:
+            stmt = update(Community).where(Community.id == community.id).values(avatar_url=None)
+
+            if community.avatar_url is not None:
+                if os.path.exists(community.avatar_url):
+                    os.remove(community.avatar_url)
+
+    await session.execute(stmt)
+    await session.commit()
