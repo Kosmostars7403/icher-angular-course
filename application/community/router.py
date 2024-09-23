@@ -1,12 +1,10 @@
 import os
 from typing import Annotated, List
 
-from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File, Query
-from fastapi_filter import FilterDepends
+from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File
 from fastapi_pagination import Page, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.account.schemas.user_schemas import UserReadSchemaShort
@@ -14,7 +12,7 @@ from application.community.crud import get_all_communities, get_community_by_id,
     create_community as create_community_db, update_community as update_community_db, \
     delete_community as delete_community_db, delete_community_image_in_db, \
     upload_community_image_in_db, get_community_subscribers as get_community_subscribers_db, upd_subscribers
-from application.community.models import ImageType, CommunityThemes
+from application.community.models import ImageType
 from application.community.schemas import CommunityReadSchema, CommunityCreateSchema, CommunityUpdateSchema
 from application.community.validators import validate_community_admin
 from database.db import get_async_session
@@ -22,7 +20,7 @@ from database.db import get_async_session
 router = APIRouter(
     tags=['community'],
     prefix='/community',
-    include_in_schema=False
+    include_in_schema=True
 )
 
 IMAGE_DIR = 'static/community'
@@ -55,7 +53,7 @@ async def get_community(community_id: int,
             dependencies=[Depends(get_current_active_user)])
 async def get_community_subscribers(community_id: int,
                                     session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
-    return await get_community_subscribers_db(community_id=community_id, session=session)
+    return paginate(await get_community_subscribers_db(community_id=community_id, session=session))
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=CommunityReadSchema)
