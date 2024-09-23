@@ -50,9 +50,7 @@ class CommunityCreateSchema(BaseModel):
                               populate_by_name=True, from_attributes=True)
 
     name: str
-    banner_url: str | None = None
     themes: list[CommunityTheme] | None = []
-    avatar_url: str | None = None
     description: str | None = None
 
 
@@ -63,7 +61,6 @@ class CommunityUpdateSchema(BaseModel):
     name: str | None = None
     themes: list[CommunityTheme] | None = []
     description: str | None = None
-    subscribers: list[int] | None = []
 
 
 class SubscriptionsSchema(BaseModel):

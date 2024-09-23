@@ -1,24 +1,27 @@
 import os
-from typing import Annotated
+from typing import Annotated, List
 
-from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File, Query
+from fastapi_filter import FilterDepends
+from fastapi_pagination import Page, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User
+from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.community.crud import get_all_communities, get_community_by_id, \
     create_community as create_community_db, update_community as update_community_db, \
     delete_community as delete_community_db, delete_community_image_in_db, \
-    upload_community_image_in_db
-from application.community.models import ImageType
+    upload_community_image_in_db, get_community_subscribers as get_community_subscribers_db, upd_subscribers
+from application.community.models import ImageType, CommunityThemes
 from application.community.schemas import CommunityReadSchema, CommunityCreateSchema, CommunityUpdateSchema
 from application.community.validators import validate_community_admin
 from database.db import get_async_session
 
 router = APIRouter(
     tags=['community'],
-    prefix='/community',
-    include_in_schema=False
+    prefix='/community'
 )
 
 IMAGE_DIR = 'static/community'
@@ -30,10 +33,11 @@ IMAGE_EXTENSIONS = [
 ]
 
 
-@router.get('/', status_code=status.HTTP_200_OK, response_model=list[CommunityReadSchema],
+@router.get('/', status_code=status.HTTP_200_OK,
             dependencies=[Depends(get_current_active_user)])
-async def get_communities(name: str | None = None, session: AsyncSession = Depends(get_async_session)):
-    return await get_all_communities(name=name, session=session)
+async def get_communities(name: str | None = None, themes: str | None = None,
+                          session: AsyncSession = Depends(get_async_session)) -> Page[CommunityReadSchema]:
+    return paginate(await get_all_communities(name=name, themes=themes, session=session))
 
 
 @router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema,
@@ -44,6 +48,13 @@ async def get_community(community_id: int,
         return community
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
+
+
+@router.get('/subscribers/{community_id}', response_model=List[UserReadSchemaShort],
+            dependencies=[Depends(get_current_active_user)])
+async def get_community_subscribers(community_id: int,
+                                    session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
+    return await get_community_subscribers_db(community_id=community_id, session=session)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=CommunityReadSchema)
@@ -92,8 +103,8 @@ async def join_community(community_id: int, user: Annotated[User, Depends(get_cu
     if user.id not in community.subscribers:
         community.subscribers.append(user.id)
 
-        await update_community_db(community_id=community_id,
-                                  community=CommunityUpdateSchema(subscribers=community.subscribers),
+        await upd_subscribers(community_id=community_id,
+                              subscribers=community.subscribers,
                                   session=session)
 
         return {'message': f'You are now subscribed'}
@@ -113,8 +124,8 @@ async def leave_community(community_id: int, user: Annotated[User, Depends(get_c
     if user.id in community.subscribers and community.admin_id != user.id:
         community.subscribers.remove(user.id)
 
-        await update_community_db(community_id=community_id,
-                                  community=CommunityUpdateSchema(subscribers=community.subscribers),
+        await upd_subscribers(community_id=community_id,
+                              subscribers=community.subscribers,
                                   session=session)
 
         return {'message': f'You are now unsubscribed'}

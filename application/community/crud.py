@@ -1,13 +1,18 @@
 import os
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, insert, update, func
+from sqlalchemy.dialects.postgresql.array import CONTAINS
 from fastapi import HTTPException
 
+from application.account.filters import UserFilter
 from application.account.models import User
+from application.account.routers.auth_router import router
+from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.comment.models import Comment
-from application.community.models import Community, ImageType
+from application.community.models import Community, ImageType, CommunityThemes
 from application.community.schemas import CommunityCreateSchema, CommunityUpdateSchema
 from application.post.models import Post
 
@@ -27,7 +32,7 @@ async def get_community_by_id(community_id: int, session: AsyncSession) -> Commu
     return community
 
 
-async def get_all_communities(name: str | None, session: AsyncSession):
+async def get_all_communities(name: str | None, themes: str | None, session: AsyncSession):
     stmt = select(Community).options(
         selectinload(Community.posts).options(
             selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
@@ -35,11 +40,14 @@ async def get_all_communities(name: str | None, session: AsyncSession):
         selectinload(Community.admin)
     ).order_by(Community.name)
 
+    if themes:
+        themes = themes.upper().split(',')
+        stmt = stmt.filter(CONTAINS(Community.themes, themes))
+
     if name:
         stmt = stmt.filter(func.similarity(Community.name, name) > 0.3)
 
     return (await session.execute(stmt)).scalars().all()
-
 
 async def create_community(community: CommunityCreateSchema, user: User, session: AsyncSession):
     data = community.model_dump(exclude_none=True)
@@ -55,6 +63,11 @@ async def create_community(community: CommunityCreateSchema, user: User, session
 
 async def update_community(community_id: int, community: CommunityUpdateSchema, session: AsyncSession):
     stmt = update(Community).where(Community.id == community_id).values(**community.model_dump(exclude_none=True))
+    await session.execute(stmt)
+    await session.commit()
+
+async def upd_subscribers(community_id: int, subscribers: List[int], session: AsyncSession):
+    stmt = update(Community).where(Community.id == community_id).values(subscribers=subscribers)
     await session.execute(stmt)
     await session.commit()
 
@@ -103,3 +116,13 @@ async def delete_community_image_in_db(community: Community, img_type: ImageType
 
     await session.execute(stmt)
     await session.commit()
+
+
+async def get_community_subscribers(community_id: int, session: AsyncSession):
+    stmt = select(Community).filter(Community.id == community_id)
+    community = (await session.execute(stmt)).scalar_one()
+
+    stmt = select(User).filter(User.id.in_(community.subscribers))
+    subscribers = (await session.execute(stmt)).scalars().all()
+
+    return subscribers
