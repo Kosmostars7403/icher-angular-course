@@ -21,7 +21,8 @@ from database.db import get_async_session
 
 router = APIRouter(
     tags=['community'],
-    prefix='/community'
+    prefix='/community',
+    include_in_schema=False
 )
 
 IMAGE_DIR = 'static/community'
