@@ -51,6 +51,12 @@ class PostCreateSchema(BaseModel):
     author_id: int | None = None
     community_id: int | None = None
 
+    @field_validator('community_id', mode='before')
+    def community_id_before(cls, v):
+        if v == 0:
+            return None
+        return v
+
 
 class PostUpdateSchema(BaseModel):
     title: str | None = None

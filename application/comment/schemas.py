@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, alias_generators, ConfigDict
+from pydantic import BaseModel, alias_generators, ConfigDict, field_validator
 
 from application.account.schemas.user_schemas import UserReadSchema, UserReadSchemaShort, UserReadSmallSchema
 
@@ -30,6 +30,12 @@ class CommentCreateSchema(BaseModel):
     author_id: int | None = None
     post_id: int
     comment_id: int | None = None
+
+    @field_validator('comment_id', mode='before')
+    def comment_id_before(cls, v):
+        if v == 0:
+            return None
+        return v
 
 
 class CommentUpdateSchema(BaseModel):

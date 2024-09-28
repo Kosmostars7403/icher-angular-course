@@ -59,8 +59,6 @@ def build_docs(
         if prefix not in custom_openapi:
             custom_openapi[prefix] = copy.deepcopy(request.app.openapi())
 
-            print(custom_openapi[prefix]['paths'])
-
             # Remove not valid tags on openapi schema.
             for path in custom_openapi[prefix]["paths"].copy():
                 for method in custom_openapi[prefix]["paths"][path].copy():
