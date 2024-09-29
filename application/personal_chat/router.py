@@ -39,6 +39,9 @@ async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends
 
     personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
 
+    if current_user.id != personal_chat.user_second_id or current_user.id == personal_chat.user_first_id:
+        raise HTTPException(status_code=403, detail="It's not your chat")
+
     if personal_chat is None:
         raise HTTPException(status_code=404, detail='Chat not found')
 
@@ -83,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket):
             websocket=websocket
         )
 
-    if user is not None:
+    if user:
         await manager.add_user_connection(websocket, user.id)
         await manager.send_unread_notify(current_user=user)
 
@@ -102,5 +105,5 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        if user is not None:
+        if user:
             manager.disconnect_user(user.id)
