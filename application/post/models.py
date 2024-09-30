@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Integer, ForeignKey, ARRAY, Column
+from sqlalchemy import String, Integer, ForeignKey, ARRAY, Column, BigInteger, BIGINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from application.like.models import Like
 
@@ -17,7 +17,7 @@ class Post(Base):
     __tablename__ = 'post'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    author_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    author_id: Mapped[BigInteger] = mapped_column(BIGINT, ForeignKey('user.id'))
     community_id: Mapped[int | None] = mapped_column(ForeignKey('community.id'))
     title: Mapped[str] = mapped_column(String(255))
     content: Mapped[str | None] = mapped_column(String)

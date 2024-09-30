@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, ForeignKey, String, ARRAY, Column, Enum as SQLEnum, BIGINT
+from sqlalchemy import Integer, ForeignKey, String, ARRAY, Column, Enum as SQLEnum, BIGINT, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
@@ -28,7 +28,7 @@ class Community(Base):
     __tablename__ = 'community'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    admin_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
+    admin_id: Mapped[BigInteger] = mapped_column(BIGINT, ForeignKey('user.id'))
     name: Mapped[str] = mapped_column(String(length=128))
     themes: ARRAY | None = Column(ARRAY(SQLEnum(CommunityThemes)), default=[])
     banner_url: Mapped[str | None] = mapped_column(String(length=1024))

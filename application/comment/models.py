@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP, Date
+from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP, Date, BigInteger, BIGINT
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from application.account.models import User
@@ -16,7 +16,7 @@ class Comment(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
     text: Mapped[str] = mapped_column(String(255))
-    author_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
+    author_id: Mapped[BigInteger] = mapped_column(BIGINT, ForeignKey('user.id'))
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey('post.id'))
     comment_id: Mapped[int | None] = mapped_column(Integer, ForeignKey('comment.id'))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)

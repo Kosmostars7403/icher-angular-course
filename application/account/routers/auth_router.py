@@ -63,7 +63,7 @@ async def logout():
     return {'message': 'logout'}
 
 
-@router.post('/register', include_in_schema=False)
+@router.post('/register', include_in_schema=True)
 async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = Depends(get_async_session)):
     user_data = new_user.model_dump()
 
@@ -91,7 +91,7 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
 
     for bot_id in bots_ids:
         bot = await get_user_by_id(bot_id, session)
-        bot.subscriptions.append(new_user.id)
+        bot.subscriptions.append(user.id)
         await update_user(bot, {'subscriptions': bot.subscriptions}, session) # add test persons to subscribers
 
     return {
