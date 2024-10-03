@@ -28,13 +28,13 @@ IMAGE_EXTENSIONS = [
 ]
 
 
-@router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema],
-            dependencies=[Depends(get_current_active_user)])
-async def get_posts(session: AsyncSession = Depends(get_async_session)):
+@router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema])
+async def get_posts(user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session)):
 
     models = []
 
-    for post in await get_all_posts(session=session):
+    for post in await get_all_posts(user=user, session=session):
+
         if post.community_id:
             model = PostReadSchema.model_validate(post)
             model.author = CommunityReadSchema.model_validate(post.community)

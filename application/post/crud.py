@@ -18,12 +18,13 @@ async def get_post_by_id(post_id: int, session: AsyncSession):
                                                      ])
 
 
-async def get_all_posts(session: AsyncSession):
+async def get_all_posts(user: User, session: AsyncSession):
     stmt = select(Post).options(
         selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
         selectinload(Post.author), selectinload(Post.likes),
         selectinload(Post.community).options(selectinload(Community.admin))
-    )
+    ).order_by(-Post.id).where(Post.author_id == user.id)
+
     return (await session.execute(stmt)).scalars().all()
 
 
