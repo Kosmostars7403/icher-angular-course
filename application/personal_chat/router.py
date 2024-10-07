@@ -39,7 +39,7 @@ async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends
 
     personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
 
-    if current_user.id != personal_chat.user_second_id or current_user.id == personal_chat.user_first_id:
+    if current_user.id != personal_chat.user_second_id or current_user.id != personal_chat.user_first_id:
         raise HTTPException(status_code=403, detail="It's not your chat")
 
     if personal_chat is None:
