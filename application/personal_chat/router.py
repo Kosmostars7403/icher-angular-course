@@ -39,11 +39,11 @@ async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends
 
     personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
 
-    if current_user.id != personal_chat.user_second_id or current_user.id != personal_chat.user_first_id:
-        raise HTTPException(status_code=403, detail="It's not your chat")
-
     if personal_chat is None:
         raise HTTPException(status_code=404, detail='Chat not found')
+
+    if current_user.id != personal_chat.user_second_id and current_user.id != personal_chat.user_first_id:
+        raise HTTPException(status_code=403, detail="It's not your chat")
 
     if current_user.id in manager.user_connections.keys():
         await manager.send_unread_notify(current_user=current_user)

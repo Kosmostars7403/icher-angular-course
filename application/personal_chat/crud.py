@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, or_
+from sqlalchemy import select, insert, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -8,8 +8,8 @@ from application.personal_chat.models import PersonalChat
 
 async def check_if_chat_exists(user_id: int, current_user_id: int, session: AsyncSession):
     stmt = select(PersonalChat.id).filter(
-        or_((PersonalChat.user_first_id == user_id and PersonalChat.user_second_id == current_user_id),
-            PersonalChat.user_second_id == user_id and PersonalChat.user_first_id == current_user_id))
+        or_(and_(PersonalChat.user_first_id == user_id, PersonalChat.user_second_id == current_user_id),
+            and_(PersonalChat.user_second_id == user_id, PersonalChat.user_first_id == current_user_id)))
 
     if chat_id := await session.scalar(stmt):
         return chat_id
