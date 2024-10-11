@@ -13,6 +13,7 @@ class PersonalChatReadShortSchema(BaseModel):
     user_from: UserReadSchemaShort
     message: str | None = None
     created_at: datetime | None = None
+    unread_messages: int = 0
 
 
 class PersonalChatReadSchema(BaseModel):

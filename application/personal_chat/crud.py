@@ -38,6 +38,19 @@ async def get_personal_chats_by_user(user: User, session: AsyncSession):
 
     chats = (await session.execute(stmt)).scalars().all()
 
+    count_unread = 0
+
+    for chat in chats:
+        for message in chat.messages:
+
+            if not message.is_read and message.user_from_id != user.id:
+                count_unread += 1
+
+
+        chat.unread_messages = count_unread
+
+        count_unread = 0
+
     return chats
 
 
