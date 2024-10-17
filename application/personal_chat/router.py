@@ -2,6 +2,7 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import get_user_by_id
@@ -70,7 +71,7 @@ async def get_chats(current_user: Annotated[User, Depends(get_current_active_use
     return chats_schemas
 
 
-@router.websocket("/ws/")
+@router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     user = None
