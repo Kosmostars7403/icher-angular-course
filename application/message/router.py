@@ -3,12 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.account.crud import get_user_by_id
 from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.message.crud import insert_message, get_message, update_message, delete_message
 from application.message.schemas import MessageReadSchema
 from application.message.validators import is_not_my_chat
 from application.personal_chat.crud import get_personal_chat
+from application.personal_chat.ws_manager import manager
 from database.db import get_async_session
 
 router = APIRouter(
@@ -29,6 +31,8 @@ async def send_message(chat_id: int, message: str, current_user: Annotated[User,
     if await is_not_my_chat(chat=personal_chat, user_id=current_user.id):
         raise HTTPException(status_code=403, detail="This is not your chat")
 
+    get_user_id = personal_chat.user_first_id \
+        if personal_chat.user_first_id != current_user.id else personal_chat.user_second_id
 
     message_id = await insert_message(chat_id=chat_id, text=message, user_id=current_user.id, session=session)
 
@@ -37,6 +41,14 @@ async def send_message(chat_id: int, message: str, current_user: Annotated[User,
     bots_ids = [123, 124, 125, 126, 127]
     if personal_chat.user_first_id in bots_ids:
         await insert_message(chat_id=chat_id, text=message, user_id=personal_chat.user_first_id, session=session)
+
+    if get_user_id in manager.user_connections.keys():
+        get_user = await get_user_by_id(user_id=get_user_id, session=session)
+        await manager.send_message_to_chat(message={
+            'chat_id': chat_id,
+            'text': message,
+        }, websocket=manager.user_connections[get_user_id],
+            user=get_user)
 
     return await get_message(message_id=message_id, session=session)
 
