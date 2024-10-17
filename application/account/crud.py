@@ -49,7 +49,7 @@ async def delete_user(user: User, session: AsyncSession):
     stmt = delete(Post).where(Post.author_id == user.id)
     await session.execute(stmt)
 
-    stmt = delete(PersonalChat).where(PersonalChat.user_first_id == user.id or PersonalChat.user_second_id == user.id)
+    stmt = delete(PersonalChat).where(or_(PersonalChat.user_first_id == user.id,PersonalChat.user_second_id == user.id))
     await session.execute(stmt)
 
     stmt = delete(User).where(User.id == user.id)

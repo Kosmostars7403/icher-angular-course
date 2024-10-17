@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from application.account.crud import update_user, get_user_by_id
+from application.account.crud import update_user, get_user_by_id, get_user
 from application.account.helpers import get_current_active_user, \
     get_current_token_payload, get_user_by_token_sub
 from application.account.jwt import create_access_token, create_refresh_token
@@ -89,10 +89,12 @@ async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = De
     session.add(user)
     await session.commit()
 
+    user_id = (await get_user(user_data['username'])).id
+
     for bot_id in bots_ids:
         bot = await get_user_by_id(bot_id, session)
-        bot.subscriptions.append(user.id)
-        await update_user(bot, {'subscriptions': bot.subscriptions}, session) # add test persons to subscribers
+        bot.subscriptions.append(user_id)
+        await update_user(bot, {'subscriptions': bot.subscriptions}, session)  # add test persons to subscribers
 
     return {
         'username': user_data['username'],
