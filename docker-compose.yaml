@@ -32,7 +32,7 @@ services:
           && python add_subscribers.py && uvicorn app:app --reload --host 0.0.0.0 --port 8000"
 
         ports:
-          - 8080:8080
+          - 8000:8000
 
         depends_on:
           - postgres
