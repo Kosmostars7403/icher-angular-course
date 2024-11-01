@@ -1,18 +1,15 @@
 import os
 from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 from sqlalchemy import select, insert, update, func
 from sqlalchemy.dialects.postgresql.array import CONTAINS
-from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from application.account.filters import UserFilter
 from application.account.models import User
-from application.account.routers.auth_router import router
-from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.comment.models import Comment
-from application.community.models import Community, ImageType, CommunityThemes
+from application.community.models import Community, ImageType
 from application.community.schemas import CommunityCreateSchema, CommunityUpdateSchema
 from application.post.models import Post
 
@@ -32,7 +29,7 @@ async def get_community_by_id(community_id: int, session: AsyncSession) -> Commu
     return community
 
 
-async def get_all_communities(name: str | None, themes: str | None, session: AsyncSession):
+async def get_all_communities(name: str | None, themes: str | None, tags: str | None, session: AsyncSession):
     stmt = select(Community).options(
         selectinload(Community.posts).options(
             selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
@@ -44,12 +41,19 @@ async def get_all_communities(name: str | None, themes: str | None, session: Asy
         themes = themes.upper().split(',')
         stmt = stmt.filter(CONTAINS(Community.themes, themes))
 
+    if tags:
+        tags = tags.capitalize().split(',')
+        stmt = stmt.filter(CONTAINS(Community.tags, tags))
+
     if name:
         stmt = stmt.filter(func.similarity(Community.name, name) > 0.3)
 
     return (await session.execute(stmt)).scalars().all()
 
 async def create_community(community: CommunityCreateSchema, user: User, session: AsyncSession):
+    if community.tags:
+        community.tags = [tag.capitalize() for tag in community.tags]
+
     data = community.model_dump(exclude_none=True)
     data['admin_id'] = user.id
 
@@ -62,6 +66,8 @@ async def create_community(community: CommunityCreateSchema, user: User, session
 
 
 async def update_community(community_id: int, community: CommunityUpdateSchema, session: AsyncSession):
+    if community.tags:
+        community.tags = [tag.capitalize() for tag in community.tags]
     stmt = update(Community).where(Community.id == community_id).values(**community.model_dump(exclude_none=True))
     await session.execute(stmt)
     await session.commit()

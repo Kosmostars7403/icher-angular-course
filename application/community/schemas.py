@@ -36,6 +36,7 @@ class CommunityReadSchema(BaseModel):
     admin: UserReadSchemaShort
     name: str
     themes: list[CommunityTheme] | None = []
+    tags: list[str] | None = []
     banner_url: str | None = None
     avatar_url: str | None = None
     description: str | None = None
@@ -51,6 +52,7 @@ class CommunityCreateSchema(BaseModel):
 
     name: str
     themes: list[CommunityTheme] | None = []
+    tags: list[str] | None = None
     description: str | None = None
 
 
@@ -60,6 +62,7 @@ class CommunityUpdateSchema(BaseModel):
 
     name: str | None = None
     themes: list[CommunityTheme] | None = []
+    tags: list[str] | None = None
     description: str | None = None
 
 

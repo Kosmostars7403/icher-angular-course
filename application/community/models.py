@@ -31,6 +31,7 @@ class Community(Base):
     admin_id: Mapped[BigInteger] = mapped_column(BIGINT, ForeignKey('user.id'))
     name: Mapped[str] = mapped_column(String(length=128))
     themes: ARRAY | None = Column(ARRAY(SQLEnum(CommunityThemes)), default=[])
+    tags: ARRAY = Column(ARRAY(String), default=[])
     banner_url: Mapped[str | None] = mapped_column(String(length=1024))
     avatar_url: Mapped[str | None] = mapped_column(String(length=1024))
     description: Mapped[str | None] = mapped_column(String)
