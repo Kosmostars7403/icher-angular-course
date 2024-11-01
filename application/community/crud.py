@@ -79,9 +79,9 @@ async def delete_community(community_id: int, session: AsyncSession):
         if os.path.exists(community.avatar_url):
             os.remove(community.avatar_url)
 
-    if community.cover_art_url:
-        if os.path.exists(community.cover_art_url):
-            os.remove(community.cover_art_url)
+    if community.banner_url:
+        if os.path.exists(community.banner_url):
+            os.remove(community.banner_url)
 
     await session.delete(community)
     await session.commit()
