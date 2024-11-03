@@ -52,7 +52,7 @@ class CommunityCreateSchema(BaseModel):
 
     name: str
     themes: list[CommunityTheme] | None = []
-    tags: list[str] | None = None
+    tags: list[str] | None = []
     description: str | None = None
 
 
@@ -61,7 +61,7 @@ class CommunityUpdateSchema(BaseModel):
                               populate_by_name=True, from_attributes=True)
 
     name: str | None = None
-    themes: list[CommunityTheme] | None = []
+    themes: list[CommunityTheme] | None = None
     tags: list[str] | None = None
     description: str | None = None
 

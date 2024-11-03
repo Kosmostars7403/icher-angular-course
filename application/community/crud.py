@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from fastapi import HTTPException
-from sqlalchemy import select, insert, update, func
+from sqlalchemy import select, insert, update, func, or_
 from sqlalchemy.dialects.postgresql.array import CONTAINS
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -46,7 +46,7 @@ async def get_all_communities(name: str | None, themes: str | None, tags: str | 
         stmt = stmt.filter(CONTAINS(Community.tags, tags))
 
     if name:
-        stmt = stmt.filter(func.similarity(Community.name, name) > 0.3)
+        stmt = stmt.filter(or_(func.similarity(Community.name, name) > 0.3, Community.name.ilike(f'%{name}%')))
 
     return (await session.execute(stmt)).scalars().all()
 
