@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from fastapi import HTTPException
-from sqlalchemy import select, insert, update, func, or_
+from sqlalchemy import select, insert, update, func, or_, delete
 from sqlalchemy.dialects.postgresql.array import CONTAINS
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -88,6 +88,9 @@ async def delete_community(community_id: int, session: AsyncSession):
     if community.banner_url:
         if os.path.exists(community.banner_url):
             os.remove(community.banner_url)
+
+    stmt = delete(Post).filter(Post.community_id == community_id)
+    await session.execute(stmt)
 
     await session.delete(community)
     await session.commit()

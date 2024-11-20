@@ -49,7 +49,7 @@ async def get_community(community_id: int,
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
 
 
-@router.get('/subscribers/{community_id}', response_model=List[UserReadSchemaShort],
+@router.get('/subscribers/{community_id}',
             dependencies=[Depends(get_current_active_user)])
 async def get_community_subscribers(community_id: int,
                                     session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:

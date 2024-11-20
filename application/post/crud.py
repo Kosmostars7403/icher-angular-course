@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import select, update, insert
+from sqlalchemy import select, update, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -59,6 +59,8 @@ async def delete_post(post_id: int, session: AsyncSession):
         for image in post.images:
             if os.path.exists(image):
                 os.remove(image)
+    stmt = delete(Comment).where(Comment.post_id == post.id)
+    await session.execute(stmt)
 
     await session.delete(post)
     await session.commit()
