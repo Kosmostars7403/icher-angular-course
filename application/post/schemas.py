@@ -7,7 +7,7 @@ from application.comment.schemas import CommentReadWithChildSchema
 from application.community.models import CommunityThemes as CommunityTheme
 
 
-class CommunityReadSchema(BaseModel):
+class CommunityShortReadSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
                               from_attributes=True)
 
@@ -15,6 +15,7 @@ class CommunityReadSchema(BaseModel):
     admin: UserReadSchemaShort
     name: str
     themes: list[CommunityTheme] | None = []
+    tags: list[str] | None = []
     banner_url: str | None = None
     avatar_url: str | None = None
     description: str | None = None
@@ -29,7 +30,7 @@ class PostReadSchema(BaseModel):
     title: str
     community_id: int | None = None
     content: str | None = ''
-    author: UserReadSchemaShort | CommunityReadSchema
+    author: UserReadSchemaShort | CommunityShortReadSchema
     images: list[str] | None = None
     created_at: datetime
     updated_at: datetime | None = None

@@ -10,25 +10,7 @@ from application.community.models import CommunityThemes as CommunityTheme
 class Theme(BaseModel):
     theme: CommunityTheme
 
-class PostReadSchema(BaseModel):
-    model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
-                              from_attributes=True)
-
-    id: int
-    title: str
-    content: str | None = ''
-    images: list[str] | None = None
-    created_at: datetime
-    updated_at: datetime | None = None
-    likes: int
-
-    @field_validator('likes', mode='before')
-    def validate_likes(cls, v):
-        return len([like for like in v])
-
-    comments: list[CommentReadWithChildSchema] | None = []
-
-class CommunityReadSchema(BaseModel):
+class CommunityShortReadSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
                               from_attributes=True)
 
@@ -43,6 +25,27 @@ class CommunityReadSchema(BaseModel):
     subscribers_amount: int | None = 0
     created_at: datetime
 
+class PostReadSchema(BaseModel):
+    model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
+                              from_attributes=True)
+
+    id: int
+    title: str
+    community_id: int | None = None
+    content: str | None = ''
+    author: UserReadSchemaShort | CommunityShortReadSchema
+    images: list[str] | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+    likes: int
+
+    @field_validator('likes', mode='before')
+    def validate_likes(cls, v):
+        return len([like for like in v])
+
+    comments: list[CommentReadWithChildSchema] | None = []
+
+class CommunityReadSchema(CommunityShortReadSchema):
     posts: list[PostReadSchema] | None = []
 
 

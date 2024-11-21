@@ -1,5 +1,5 @@
 import os
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File
 from fastapi_pagination import Page, paginate
@@ -13,7 +13,9 @@ from application.community.crud import get_all_communities, get_community_by_id,
     delete_community as delete_community_db, delete_community_image_in_db, \
     upload_community_image_in_db, get_community_subscribers as get_community_subscribers_db, upd_subscribers
 from application.community.models import ImageType
-from application.community.schemas import CommunityReadSchema, CommunityCreateSchema, CommunityUpdateSchema
+from application.community.schemas import CommunityReadSchema, CommunityCreateSchema, CommunityUpdateSchema, \
+    PostReadSchema, CommunityShortReadSchema
+from application.community.services import update_author_from_community
 from application.community.validators import validate_community_admin
 from database.db import get_async_session
 
@@ -35,7 +37,7 @@ IMAGE_EXTENSIONS = [
 @router.get('/', status_code=status.HTTP_200_OK,
             dependencies=[Depends(get_current_active_user)])
 async def get_communities(name: str | None = None, themes: str | None = None, tags: str | None = None,
-                          session: AsyncSession = Depends(get_async_session)) -> Page[CommunityReadSchema]:
+                          session: AsyncSession = Depends(get_async_session)) -> Page[CommunityShortReadSchema]:
     return paginate(await get_all_communities(name=name, themes=themes, tags=tags, session=session))
 
 
@@ -43,8 +45,28 @@ async def get_communities(name: str | None = None, themes: str | None = None, ta
             dependencies=[Depends(get_current_active_user)])
 async def get_community(community_id: int,
                         session: AsyncSession = Depends(get_async_session)):
+
     if community := await get_community_by_id(community_id=community_id, session=session):
-        return community
+        return await update_author_from_community(community)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
+
+
+@router.get('/{community_id}/posts', status_code=status.HTTP_200_OK,
+            dependencies=[Depends(get_current_active_user)])
+async def get_community_posts(community_id: int, session: AsyncSession = Depends(get_async_session))  \
+        -> Page[PostReadSchema]:
+
+    if community := await get_community_by_id(community_id=community_id, session=session):
+
+        posts = []
+
+        for post in community.posts:
+            model = PostReadSchema.model_validate(post)
+            model.author = CommunityShortReadSchema.model_validate(community)
+            posts.append(model)
+
+        return paginate(posts)
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
 
@@ -75,7 +97,7 @@ async def update_community(community_id: int, community: CommunityUpdateSchema,
 
     await update_community_db(community_id=community_id, community=community, session=session)
 
-    return await get_community_by_id(community_id=community_id, session=session)
+    return await update_author_from_community(await get_community_by_id(community_id=community_id, session=session))
 
 
 @router.delete('/{community_id}', status_code=status.HTTP_204_NO_CONTENT)

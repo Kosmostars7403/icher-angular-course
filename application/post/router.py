@@ -8,7 +8,7 @@ from application.account.helpers import get_current_active_user
 from application.account.models import User
 from application.community.crud import get_community_by_id
 from application.community.validators import validate_community_admin
-from application.post.schemas import PostReadSchema, PostCreateSchema, PostUpdateSchema, CommunityReadSchema
+from application.post.schemas import PostReadSchema, PostCreateSchema, PostUpdateSchema, CommunityShortReadSchema
 from database.db import get_async_session
 from application.post.crud import get_all_posts, create_post as crud_create_post, update_post as crud_update_post, \
     delete_post as crud_delete_post, get_post_by_id, get_posts_by_subscriptions, upload_image_in_db_post, \
@@ -37,7 +37,7 @@ async def get_posts(user: User = Depends(get_current_active_user), session: Asyn
 
         if post.community_id:
             model = PostReadSchema.model_validate(post)
-            model.author = CommunityReadSchema.model_validate(post.community)
+            model.author = CommunityShortReadSchema.model_validate(post.community)
             models.append(model)
         else:
             models.append(post)
@@ -67,7 +67,7 @@ async def get_my_subscriptions_post(user: Annotated[User, Depends(get_current_ac
     for post in await get_posts_by_subscriptions(user=user, session=session):
         if post.community_id:
             model = PostReadSchema.model_validate(post)
-            model.author = CommunityReadSchema.model_validate(post.community)
+            model.author = CommunityShortReadSchema.model_validate(post.community)
             models.append(model)
         else:
             models.append(post)
@@ -84,7 +84,7 @@ async def get_post(post_id: int, session: AsyncSession = Depends(get_async_sessi
 
     if post.community_id:
         model = PostReadSchema.model_validate(post)
-        model.author = CommunityReadSchema.model_validate(post.community)
+        model.author = CommunityShortReadSchema.model_validate(post.community)
         return model
 
     return post
