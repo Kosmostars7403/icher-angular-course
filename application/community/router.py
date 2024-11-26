@@ -167,7 +167,7 @@ async def upload_image(community_id: int, image_type: ImageType,
     image_content = await image.read()
     image_format = image.filename.split('.')[-1]
 
-    if image_format not in IMAGE_EXTENSIONS:
+    if image_format.lower() not in IMAGE_EXTENSIONS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f'Image format {image_format} is not supported')
 

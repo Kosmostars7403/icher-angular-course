@@ -129,7 +129,7 @@ async def load_image(post_id: int, current_user: Annotated[User, Depends(get_cur
     image_content = await image.read()
     image_type = image.filename.split('.')[-1]
 
-    if image_type not in IMAGE_EXTENSIONS:
+    if image_type.lower() not in IMAGE_EXTENSIONS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f'Image type {image_type} is not supported')
 
