@@ -14,7 +14,7 @@ from application.community.schemas import CommunityCreateSchema, CommunityUpdate
 from application.post.models import Post
 
 
-async def get_community_by_id(community_id: int, session: AsyncSession) -> Community | None:
+async def get_community_by_id(community_id: int, user: User, session: AsyncSession) -> Community | None:
     community = await session.get(Community, community_id, options=[
         selectinload(Community.posts).options(
             selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
@@ -25,6 +25,7 @@ async def get_community_by_id(community_id: int, session: AsyncSession) -> Commu
         raise HTTPException(status_code=404, detail="Community not found")
 
     community.subscribers_amount = len([subscriber for subscriber in community.subscribers])
+    community.is_joined = user.id == community.admin_id or user.id in community.subscribers
 
     return community
 
@@ -70,7 +71,7 @@ async def create_community(community: CommunityCreateSchema, user: User, session
     community_id = await session.scalar(stmt)
     await session.commit()
 
-    return await get_community_by_id(community_id, session)
+    return await get_community_by_id(community_id, user, session)
 
 
 async def update_community(community_id: int, community: CommunityUpdateSchema, session: AsyncSession):

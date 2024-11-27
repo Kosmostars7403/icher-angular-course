@@ -41,12 +41,11 @@ async def get_communities(name: str | None = None, themes: str | None = None, ta
     return paginate(await get_all_communities(name=name, themes=themes, tags=tags, user=user, session=session))
 
 
-@router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema,
-            dependencies=[Depends(get_current_active_user)])
-async def get_community(community_id: int,
+@router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema)
+async def get_community(community_id: int, user: User = Depends(get_current_active_user),
                         session: AsyncSession = Depends(get_async_session)):
 
-    if community := await get_community_by_id(community_id=community_id, session=session):
+    if community := await get_community_by_id(community_id=community_id, user=user, session=session):
         return await update_author_from_community(community)
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
@@ -88,7 +87,7 @@ async def create_community(community: CommunityCreateSchema, user: Annotated[Use
 async def update_community(community_id: int, community: CommunityUpdateSchema,
                            user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
-    old_community = await get_community_by_id(community_id=community_id, session=session)
+    old_community = await get_community_by_id(community_id=community_id, user=user, session=session)
 
     if not old_community:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
@@ -97,13 +96,13 @@ async def update_community(community_id: int, community: CommunityUpdateSchema,
 
     await update_community_db(community_id=community_id, community=community, session=session)
 
-    return await update_author_from_community(await get_community_by_id(community_id=community_id, session=session))
+    return await update_author_from_community(await get_community_by_id(community_id=community_id, user=user, session=session))
 
 
 @router.delete('/{community_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
-    community = await get_community_by_id(community_id=community_id, session=session)
+    community = await get_community_by_id(community_id=community_id, user=user, session=session)
 
     if not community:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Community not found')
@@ -116,7 +115,7 @@ async def delete_community(community_id: int, user: Annotated[User, Depends(get_
 @router.post('/{community_id}/join', status_code=status.HTTP_200_OK)
 async def join_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                          session: AsyncSession = Depends(get_async_session)):
-    community = await get_community_by_id(community_id=community_id, session=session)
+    community = await get_community_by_id(community_id=community_id, user=user, session=session)
 
     if community.admin_id == user.id:
         return {'message': f"It's your community! You are already subscribed"}
@@ -137,7 +136,7 @@ async def join_community(community_id: int, user: Annotated[User, Depends(get_cu
 @router.delete('/{community_id}/join', status_code=status.HTTP_202_ACCEPTED)
 async def leave_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                           session: AsyncSession = Depends(get_async_session)):
-    community = await get_community_by_id(community_id=community_id, session=session)
+    community = await get_community_by_id(community_id=community_id, user=user, session=session)
 
     if community.admin_id == user.id:
         return {'message': f"It's your community! You are not to unsubscribe"}
@@ -160,7 +159,7 @@ async def upload_image(community_id: int, image_type: ImageType,
                        user: Annotated[User, Depends(get_current_active_user)],
                        image: UploadFile = File(...),
                        session: AsyncSession = Depends(get_async_session)):
-    community = await get_community_by_id(community_id=community_id, session=session)
+    community = await get_community_by_id(community_id=community_id, user=user,  session=session)
 
     await validate_community_admin(user=user, community=community)
 
@@ -193,16 +192,16 @@ async def upload_image(community_id: int, image_type: ImageType,
             await upload_community_image_in_db(community_id=community_id, image_url=image_url, img_type=ImageType.AVATAR,
                                      session=session)
 
-    return await get_community_by_id(community_id=community_id, session=session)
+    return await get_community_by_id(community_id=community_id, user=user, session=session)
 
 
 @router.delete('/delete_image/{community_id}', status_code=status.HTTP_202_ACCEPTED, response_model=CommunityReadSchema)
 async def delete_image(community_id: int, image_type: ImageType,
                        user: Annotated[User, Depends(get_current_active_user)],
                        session: AsyncSession = Depends(get_async_session)):
-    community = await get_community_by_id(community_id=community_id, session=session)
+    community = await get_community_by_id(community_id=community_id, user=user, session=session)
     await validate_community_admin(user=user, community=community)
 
     await delete_community_image_in_db(community=community, img_type=image_type, session=session)
 
-    return await get_community_by_id(community_id=community_id, session=session)
+    return await get_community_by_id(community_id=community_id, user=user, session=session)
