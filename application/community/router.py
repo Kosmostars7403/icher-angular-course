@@ -52,11 +52,11 @@ async def get_community(community_id: int, user: User = Depends(get_current_acti
 
 
 @router.get('/{community_id}/posts', status_code=status.HTTP_200_OK,
-            dependencies=[Depends(get_current_active_user)])
-async def get_community_posts(community_id: int, session: AsyncSession = Depends(get_async_session))  \
+            dependencies=[])
+async def get_community_posts(community_id: int, user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session))  \
         -> Page[PostReadSchema]:
 
-    if community := await get_community_by_id(community_id=community_id, session=session):
+    if community := await get_community_by_id(community_id=community_id, user=user, session=session):
 
         posts = []
 
@@ -109,7 +109,7 @@ async def delete_community(community_id: int, user: Annotated[User, Depends(get_
 
     await validate_community_admin(user=user, community=community)
 
-    await delete_community_db(community_id=community_id, session=session)
+    await delete_community_db(community_id=community_id, user=user, session=session)
 
 
 @router.post('/{community_id}/join', status_code=status.HTTP_200_OK)

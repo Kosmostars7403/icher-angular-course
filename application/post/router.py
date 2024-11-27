@@ -51,7 +51,7 @@ async def create_post(post: PostCreateSchema, user: Annotated[User, Depends(get_
                       session: AsyncSession = Depends(get_async_session)):
 
     if post.community_id:
-        community = await get_community_by_id(community_id=post.community_id, session=session)
+        community = await get_community_by_id(community_id=post.community_id, user=user, session=session)
         await validate_community_admin(user=user, community=community)
 
     post.author_id = user.id

@@ -87,8 +87,8 @@ async def upd_subscribers(community_id: int, subscribers: List[int], session: As
     await session.commit()
 
 
-async def delete_community(community_id: int, session: AsyncSession):
-    community = await get_community_by_id(community_id, session)
+async def delete_community(community_id: int, user: User, session: AsyncSession):
+    community = await get_community_by_id(community_id, user, session)
 
     if community.avatar_url:
         if os.path.exists(community.avatar_url):
