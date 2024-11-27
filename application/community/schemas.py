@@ -24,6 +24,7 @@ class CommunityShortReadSchema(BaseModel):
     description: str | None = None
     subscribers_amount: int | None = 0
     created_at: datetime
+    is_joined: bool = False
 
 class PostReadSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,

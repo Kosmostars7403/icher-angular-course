@@ -29,7 +29,7 @@ async def get_community_by_id(community_id: int, session: AsyncSession) -> Commu
     return community
 
 
-async def get_all_communities(name: str | None, themes: str | None, tags: str | None, session: AsyncSession):
+async def get_all_communities(name: str | None, themes: str | None, tags: str | None, user: User, session: AsyncSession):
     stmt = select(Community).options(
         selectinload(Community.posts).options(
             selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
@@ -48,7 +48,15 @@ async def get_all_communities(name: str | None, themes: str | None, tags: str | 
     if name:
         stmt = stmt.filter(or_(func.similarity(Community.name, name) > 0.3, Community.name.ilike(f'%{name}%')))
 
-    return (await session.execute(stmt)).scalars().all()
+    communities = (await session.execute(stmt)).scalars().all()
+
+    for community in communities:
+        community.subscribers_amount = len([subscriber for subscriber in community.subscribers])
+
+        if user.id == community.admin_id or user.id in community.subscribers:
+            community.is_joined = True
+
+    return communities
 
 async def create_community(community: CommunityCreateSchema, user: User, session: AsyncSession):
     if community.tags:

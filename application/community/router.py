@@ -34,11 +34,11 @@ IMAGE_EXTENSIONS = [
 ]
 
 
-@router.get('/', status_code=status.HTTP_200_OK,
-            dependencies=[Depends(get_current_active_user)])
+@router.get('/', status_code=status.HTTP_200_OK)
 async def get_communities(name: str | None = None, themes: str | None = None, tags: str | None = None,
+                          user: User = Depends(get_current_active_user),
                           session: AsyncSession = Depends(get_async_session)) -> Page[CommunityShortReadSchema]:
-    return paginate(await get_all_communities(name=name, themes=themes, tags=tags, session=session))
+    return paginate(await get_all_communities(name=name, themes=themes, tags=tags, user=user, session=session))
 
 
 @router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema,
