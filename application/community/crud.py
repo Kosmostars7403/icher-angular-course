@@ -98,11 +98,19 @@ async def delete_community(community_id: int, user: User, session: AsyncSession)
         if os.path.exists(community.banner_url):
             os.remove(community.banner_url)
 
+    stmt = select(Post).filter(Post.community_id == community_id)
+    posts = (await session.execute(stmt)).scalars().all()
+
+    for post in posts:
+        stmt = delete(Comment).where(Comment.post_id == post.id)
+        await session.execute(stmt)
+
     stmt = delete(Post).filter(Post.community_id == community_id)
     await session.execute(stmt)
 
     await session.delete(community)
     await session.commit()
+
 
 
 async def upload_community_image_in_db(community_id: int, image_url: str, img_type: ImageType, session: AsyncSession):
