@@ -81,10 +81,9 @@ async def get_all_users(user_filter: UserFilter, user: User, session: AsyncSessi
     return await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
 
 
-async def get_subscribers(user_filter: UserFilter, user: User, session: AsyncSession, stack: str, first_name: str,
-                          last_name: str):
+async def get_subscribers(user_filter: UserFilter, user: User, session: AsyncSession, stack: str, first_last_name: str):
     stmt = select(User).filter(User.is_active).filter(CONTAINS(User.subscriptions, [user.id]))
-    return await filter_accounts_by_tgrm(stmt, user_filter, session, stack, first_name, last_name)
+    return await filter_subs_by_tgrm(stmt, user_filter, session, stack, first_last_name)
 
 
 async def get_test_users(session: AsyncSession):
@@ -163,6 +162,50 @@ async def filter_accounts_by_tgrm(stmt, user_filter: UserFilter, session: AsyncS
 
     if last_name:
         stmt = stmt.filter(func.similarity(User.last_name, last_name) > similarity_threshold)
+
+    query_filter = user_filter.filter(user_filter.sort(stmt))
+
+    data = (await session.execute(query_filter)).scalars().all()
+
+    for user in data:
+        stmt = select(func.count()).where(CONTAINS(User.subscriptions, [user.id]))
+        result = await session.execute(stmt)
+
+        user.subscribers_amount = result.first()[0]
+
+    filtered_data = [UserReadSchemaShort.model_validate(user) for user in
+                     data]
+
+    return filtered_data
+
+async def filter_subs_by_tgrm(stmt, user_filter: UserFilter, session: AsyncSession, stack: str, first_last_name: str):
+    similarity_threshold = 0.3
+
+    if stack:
+        stack = stack.lower().split(',')
+
+        subquery = select(
+            User.id.label('user_id'),
+            func.unnest(User.stack).label('unnested_stack')
+        ).subquery()
+
+        similarity_clauses = [
+            func.similarity(subquery.c.unnested_stack, search_word) > similarity_threshold
+            for search_word in stack
+        ]
+        similarity_filter = or_(*similarity_clauses)
+
+        stmt = stmt.join(
+            subquery,
+            and_(
+                User.id == subquery.c.user_id,
+                similarity_filter
+            )
+        ).group_by(User.id)
+
+    if first_last_name:
+        stmt = stmt.filter(or_(func.similarity(User.first_name, first_last_name) > similarity_threshold,
+                               func.similarity(User.last_name, first_last_name) > similarity_threshold))
 
     query_filter = user_filter.filter(user_filter.sort(stmt))
 

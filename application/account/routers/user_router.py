@@ -169,9 +169,8 @@ async def get_subscriptions(current_user: Annotated[User, Depends(get_current_ac
 @router.get('/subscribers/', status_code=status.HTTP_200_OK)
 async def get_subscribers(current_user: Annotated[User, Depends(get_current_active_user)],
                           stack: str = '',
-                          first_name: str = Query(alias='firstName', default=''),
-                          last_name: str = Query(alias='lastName', default=''),
+                          first_last_name: str = Query(alias='firstLastName', default=''),
                           user_filter: UserFilter = FilterDepends(UserFilter),
                           session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
     return paginate(await get_user_subscribers(user=current_user, session=session, user_filter=user_filter, stack=stack,
-                                               first_name=first_name, last_name=last_name))
+                                               first_last_name=first_last_name))
