@@ -13,7 +13,7 @@ from application.post.schemas import PostCreateSchema, PostUpdateSchema
 
 async def get_post_by_id(post_id: int, session: AsyncSession):
     return await session.get(Post, post_id, options=[
-        selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
+        selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments).selectinload(Comment.author)),
         selectinload(Post.author), selectinload(Post.likes), selectinload(Post.community).options(selectinload(Community.admin))
                                                      ])
 

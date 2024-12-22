@@ -17,8 +17,13 @@ async def update_comment(comment_id: int, comment: CommentUpdateSchema, session:
 
 
 async def delete_comment(comment_id: int, session: AsyncSession):
+
+    stmt = update(Comment).where(Comment.comment_id == comment_id).values(comment_id=None)
+    await session.execute(stmt)
+
     stmt = delete(Comment).where(Comment.id == comment_id)
     await session.execute(stmt)
+
     await session.commit()
 
 
