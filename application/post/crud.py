@@ -18,12 +18,13 @@ async def get_post_by_id(post_id: int, session: AsyncSession):
                                                      ])
 
 
-async def get_all_posts(user: User, session: AsyncSession):
+async def get_all_posts(user: User, session: AsyncSession, user_id: int = None):
+    user_select_id = user_id if user_id else user.id
     stmt = select(Post).options(
         selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments).selectinload(Comment.author)),
         selectinload(Post.author), selectinload(Post.likes),
         selectinload(Post.community).options(selectinload(Community.admin))
-    ).order_by(-Post.id).where(Post.author_id == user.id)
+    ).order_by(-Post.id).where(Post.author_id == user_select_id)
 
     return (await session.execute(stmt)).scalars().all()
 

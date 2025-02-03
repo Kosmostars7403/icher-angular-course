@@ -29,11 +29,11 @@ IMAGE_EXTENSIONS = [
 
 
 @router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema])
-async def get_posts(user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session)):
+async def get_posts(user_id: int = None, user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session)):
 
     models = []
 
-    for post in await get_all_posts(user=user, session=session):
+    for post in await get_all_posts(user=user, session=session, user_id=user_id):
 
         if post.community_id:
             model = PostReadSchema.model_validate(post)
