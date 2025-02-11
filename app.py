@@ -23,7 +23,7 @@ from fastapi_limiter import FastAPILimiter
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    redis_connection = redis.from_url("redis://localhost:6379", encoding="utf8")
+    redis_connection = redis.from_url("redis://redis:6379", encoding="utf8")
     await FastAPILimiter.init(redis_connection)
     yield
     await FastAPILimiter.close()
