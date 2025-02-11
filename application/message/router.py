@@ -13,6 +13,11 @@ from application.personal_chat.crud import get_personal_chat
 from application.personal_chat.ws_manager import manager
 from database.db import get_async_session
 
+from fastapi_limiter.depends import RateLimiter
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
+
 router = APIRouter(
     tags=['message'],
     prefix='/message',
@@ -20,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.post('/send/{chat_id}', response_model=MessageReadSchema, status_code=status.HTTP_201_CREATED)
+@router.post('/send/{chat_id}', response_model=MessageReadSchema, status_code=status.HTTP_201_CREATED, dependencies=[LIMITER_DEPENDS])
 async def send_message(chat_id: int, message: str, current_user: Annotated[User, Depends(get_current_active_user)],
                        session: AsyncSession = Depends(get_async_session)):
     personal_chat = await get_personal_chat(chat_id=chat_id, session=session)
@@ -53,7 +58,7 @@ async def send_message(chat_id: int, message: str, current_user: Annotated[User,
     return await get_message(message_id=message_id, session=session)
 
 
-@router.get('/{message_id}', response_model=MessageReadSchema, dependencies=[Depends(get_current_active_user)],
+@router.get('/{message_id}', response_model=MessageReadSchema, dependencies=[Depends(get_current_active_user), LIMITER_DEPENDS],
             status_code=status.HTTP_200_OK)
 async def get_my_message(message_id: int, session: AsyncSession = Depends(get_async_session)):
     if message := await get_message(message_id=message_id, session=session):
@@ -63,7 +68,7 @@ async def get_my_message(message_id: int, session: AsyncSession = Depends(get_as
         raise HTTPException(status_code=404, detail='Message not found')
 
 
-@router.patch('/{message_id}', response_model=MessageReadSchema, status_code=status.HTTP_202_ACCEPTED)
+@router.patch('/{message_id}', response_model=MessageReadSchema, status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def patch_my_message(message_id: int, text: str, current_user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
     if (await get_message(message_id=message_id, session=session)).user_from_id != current_user.id:
@@ -74,7 +79,7 @@ async def patch_my_message(message_id: int, text: str, current_user: Annotated[U
     return await get_message(message_id=message_id, session=session)
 
 
-@router.delete('/{message_id}',  status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{message_id}',  status_code=status.HTTP_204_NO_CONTENT, dependencies=[LIMITER_DEPENDS])
 async def delete_my_message(message_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                             session: AsyncSession = Depends(get_async_session)):
     if (await get_message(message_id=message_id, session=session)).user_from_id != current_user.id:

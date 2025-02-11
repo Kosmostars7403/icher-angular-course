@@ -19,6 +19,8 @@ bcrypt = "3.2.2"
 random-username = "^1.0.2"
 fastapi-filter = "^2.0.0"
 fastapi-pagination = "^0.12.24"
+fastapi-limiter = "^0.1.6"
+redis = "^5.2.1"
 
 
 [build-system]

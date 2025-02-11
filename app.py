@@ -17,12 +17,23 @@ from application.message.router import router as message_router
 from application.personal_chat.router import router as personal_router
 from application.post.router import router as post_router
 from settings import settings
+import redis.asyncio as redis
+from contextlib import asynccontextmanager
+from fastapi_limiter import FastAPILimiter
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    redis_connection = redis.from_url("redis://redis:6379", encoding="utf8")
+    await FastAPILimiter.init(redis_connection)
+    yield
+    await FastAPILimiter.close()
 
 app = FastAPI(
     title='AngularCourse',
     root_path=settings.ROOT_URL,
     openapi_url=None,
     docs_url=None,
+    lifespan=lifespan,
 )
 add_pagination(app)
 

@@ -21,6 +21,14 @@ services:
 
         restart: always
 
+    redis:
+      container_name: angular_course_redis
+      image: redis:7.2-alpine
+      volumes:
+        - angular_course_redis_data:/data
+
+      restart: always
+
     backend:
         container_name: angular_course_backend
         build: .
@@ -44,6 +52,7 @@ services:
 
 volumes:
   angular_course_postgres_data:
+  angular_course_redis_data:
   angular_course_static:
     driver: local
     driver_opts:

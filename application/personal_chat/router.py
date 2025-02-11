@@ -2,7 +2,6 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import get_user_by_id
@@ -15,13 +14,18 @@ from application.personal_chat.schemas import PersonalChatReadSchema, PersonalCh
 from application.personal_chat.ws_manager import manager, ERROR_TOKEN
 from database.db import get_async_session
 
+from fastapi_limiter.depends import RateLimiter
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
+
 router = APIRouter(
     tags=['chat'],
     prefix='/chat'
 )
 
 
-@router.post('/{user_id}', response_model=PersonalChatReadSchema)
+@router.post('/{user_id}', response_model=PersonalChatReadSchema, dependencies=[LIMITER_DEPENDS])
 async def create_personal_chat(user_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                                session: AsyncSession = Depends(get_async_session)):
 
@@ -33,7 +37,7 @@ async def create_personal_chat(user_id: int, current_user: Annotated[User, Depen
     return await get_personal_chat(chat_id=chat_id, session=session)
 
 
-@router.get('/{chat_id}', response_model=PersonalChatReadSchema)
+@router.get('/{chat_id}', response_model=PersonalChatReadSchema, dependencies=[LIMITER_DEPENDS])
 async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                              session: AsyncSession = Depends(get_async_session)):
     await read_personal_chat_user_messages(chat_id=chat_id, user_id=current_user.id, session=session)
@@ -52,7 +56,7 @@ async def read_personal_chat(chat_id: int, current_user: Annotated[User, Depends
     return personal_chat
 
 
-@router.get('/get_my_chats/', response_model=list[PersonalChatReadShortSchema])
+@router.get('/get_my_chats/', response_model=list[PersonalChatReadShortSchema], dependencies=[LIMITER_DEPENDS])
 async def get_chats(current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
     chats = await get_personal_chats_by_user(user=current_user, session=session)
