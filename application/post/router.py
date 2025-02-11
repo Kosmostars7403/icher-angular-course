@@ -14,6 +14,11 @@ from application.post.crud import get_all_posts, create_post as crud_create_post
     delete_post as crud_delete_post, get_post_by_id, get_posts_by_subscriptions, upload_image_in_db_post, \
     delete_image_from_post
 
+from fastapi_limiter.depends import RateLimiter
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
+
 router = APIRouter(
     tags=['post'],
     prefix='/post'
@@ -28,7 +33,7 @@ IMAGE_EXTENSIONS = [
 ]
 
 
-@router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema])
+@router.get('/', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema], dependencies=[LIMITER_DEPENDS])
 async def get_posts(user_id: int = None, user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session)):
 
     models = []
@@ -46,7 +51,7 @@ async def get_posts(user_id: int = None, user: User = Depends(get_current_active
 
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostReadSchema)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostReadSchema, dependencies=[LIMITER_DEPENDS])
 async def create_post(post: PostCreateSchema, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
 
@@ -58,7 +63,7 @@ async def create_post(post: PostCreateSchema, user: Annotated[User, Depends(get_
     return await crud_create_post(post=post, session=session)
 
 
-@router.get('/my_subscriptions', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema])
+@router.get('/my_subscriptions', status_code=status.HTTP_200_OK, response_model=list[PostReadSchema], dependencies=[LIMITER_DEPENDS])
 async def get_my_subscriptions_post(user: Annotated[User, Depends(get_current_active_user)],
                                     session: AsyncSession = Depends(get_async_session)):
 
@@ -76,7 +81,7 @@ async def get_my_subscriptions_post(user: Annotated[User, Depends(get_current_ac
 
 
 @router.get('/{post_id}', status_code=status.HTTP_200_OK, response_model=PostReadSchema,
-            dependencies=[Depends(get_current_active_user)])
+            dependencies=[Depends(get_current_active_user), LIMITER_DEPENDS])
 async def get_post(post_id: int, session: AsyncSession = Depends(get_async_session)):
     post = await get_post_by_id(post_id=post_id, session=session)
     if not post:
@@ -90,7 +95,7 @@ async def get_post(post_id: int, session: AsyncSession = Depends(get_async_sessi
     return post
 
 
-@router.patch('/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema)
+@router.patch('/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema, dependencies=[LIMITER_DEPENDS])
 async def update_post(post_id: int, post: PostUpdateSchema, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
     old_post = await get_post_by_id(post_id=post_id, session=session)
@@ -106,7 +111,7 @@ async def update_post(post_id: int, post: PostUpdateSchema, user: Annotated[User
     return await get_post_by_id(post_id=post_id, session=session)
 
 
-@router.delete('/{post_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{post_id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[LIMITER_DEPENDS])
 async def delete_post(post_id: int, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
     old_post = await get_post_by_id(post_id=post_id, session=session)
@@ -120,7 +125,7 @@ async def delete_post(post_id: int, user: Annotated[User, Depends(get_current_ac
     await crud_delete_post(post_id=post_id, session=session)
 
 
-@router.post('/upload_image/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema)
+@router.post('/upload_image/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema, dependencies=[LIMITER_DEPENDS])
 async def load_image(post_id: int, current_user: Annotated[User, Depends(get_current_active_user)], image: UploadFile = File(...),
                      session: AsyncSession = Depends(get_async_session)):
     old_post = await get_post_by_id(post_id=post_id, session=session)
@@ -149,7 +154,7 @@ async def load_image(post_id: int, current_user: Annotated[User, Depends(get_cur
 
 
 @router.delete('/delete_image/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostReadSchema,
-               dependencies=[Depends(get_current_active_user)])
+               dependencies=[Depends(get_current_active_user), LIMITER_DEPENDS])
 async def delete_image(post_id: int, image_url: str,
                        session: AsyncSession = Depends(get_async_session)):
 

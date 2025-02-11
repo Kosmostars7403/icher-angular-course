@@ -15,13 +15,19 @@ from application.account.schemas.user_schemas import UserCreateSchema
 from application.account.validation import get_password_hash, authenticate_user, validate_token_type
 from database.db import get_async_session
 
+from fastapi_limiter.depends import RateLimiter
+
+from settings import settings
+
 router = APIRouter(
     tags=['auth'],
     prefix='/auth',
 )
 
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
 
-@router.post("/token", response_model=Token)
+
+@router.post("/token", response_model=Token, dependencies=[LIMITER_DEPENDS])
 async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -45,7 +51,7 @@ async def login_for_access_token(
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 
-@router.post('/refresh', response_model=Token, response_model_exclude_none=True, )
+@router.post('/refresh', response_model=Token, response_model_exclude_none=True, dependencies=[LIMITER_DEPENDS])
 async def refresh_token(token: RefreshToken):
     payload = get_current_token_payload(token.refresh_token)
     await validate_token_type(payload, 'refresh')
@@ -58,7 +64,7 @@ async def refresh_token(token: RefreshToken):
     return Token(access_token=access_token, refresh_token=token.refresh_token, token_type="bearer")
 
 
-@router.post('/logout', dependencies=[Depends(get_current_active_user)])
+@router.post('/logout', dependencies=[Depends(get_current_active_user), LIMITER_DEPENDS])
 async def logout():
     return {'message': 'logout'}
 

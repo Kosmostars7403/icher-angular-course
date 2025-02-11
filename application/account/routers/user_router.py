@@ -14,6 +14,11 @@ from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
 from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort
 from database.db import get_async_session
+from fastapi_limiter.depends import RateLimiter
+
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
 
 disable_installed_extensions_check()
 
@@ -28,17 +33,17 @@ IMAGE_EXTENSIONS = [
     'svg', 'tif', 'tiff', 'xbm', 'xpm', 'xwd'
 ]
 
-@router.get('/test_accounts', response_model=list[UserReadSchemaShort], status_code=status.HTTP_200_OK)
+@router.get('/test_accounts', response_model=list[UserReadSchemaShort], status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_test_accounts(session: AsyncSession = Depends(get_async_session)):
     return await get_test_users(session=session)
 
 
-@router.get('/me', status_code=status.HTTP_200_OK, response_model=UserReadSchema)
+@router.get('/me', status_code=status.HTTP_200_OK, response_model=UserReadSchema, dependencies=[LIMITER_DEPENDS])
 async def get_me(current_user: Annotated[User, Depends(get_current_active_user)]):
     return current_user
 
 
-@router.patch('/me', response_model=UserReadSchema, status_code=status.HTTP_202_ACCEPTED)
+@router.patch('/me', response_model=UserReadSchema, status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def update_me(new_data: UserUpdateSchema, current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
     new_data = new_data.model_dump(exclude_none=True)
@@ -51,7 +56,7 @@ async def update_me(new_data: UserUpdateSchema, current_user: Annotated[User, De
     return await get_user(current_user.username)
 
 
-@router.delete('/me', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/me', status_code=status.HTTP_204_NO_CONTENT, dependencies=[LIMITER_DEPENDS])
 async def delete_me(current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
 
@@ -63,7 +68,7 @@ async def delete_me(current_user: Annotated[User, Depends(get_current_active_use
     return {'message': 'User deleted'}
 
 
-@router.post('/upload_image', status_code=status.HTTP_202_ACCEPTED, response_model=UserReadSchema)
+@router.post('/upload_image', status_code=status.HTTP_202_ACCEPTED, response_model=UserReadSchema, dependencies=[LIMITER_DEPENDS])
 async def load_image(current_user: Annotated[User, Depends(get_current_active_user)], image: UploadFile = File(...),
                      session: AsyncSession = Depends(get_async_session)):
 
@@ -89,7 +94,7 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
     return await get_user(current_user.username)
 
 
-@router.delete('/delete_image', status_code=status.HTTP_202_ACCEPTED, response_model=UserReadSchema)
+@router.delete('/delete_image', status_code=status.HTTP_202_ACCEPTED, response_model=UserReadSchema, dependencies=[LIMITER_DEPENDS])
 async def delete_my_image(current_user: Annotated[User, Depends(get_current_active_user)],
                           session: AsyncSession = Depends(get_async_session)):
 
@@ -97,7 +102,7 @@ async def delete_my_image(current_user: Annotated[User, Depends(get_current_acti
     return await get_user(current_user.username)
 
 
-@router.get('/accounts', status_code=status.HTTP_200_OK)
+@router.get('/accounts', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_accounts(current_user: Annotated[User, Depends(get_current_active_user)],
                        stack: str = '',
                        first_name: str = Query(alias='firstName', default=''),
@@ -108,7 +113,7 @@ async def get_accounts(current_user: Annotated[User, Depends(get_current_active_
                                         first_name=first_name, last_name=last_name))
 
 
-@router.get('/{account_id}', status_code=status.HTTP_200_OK)
+@router.get('/{account_id}', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_account(account_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
 
@@ -123,7 +128,7 @@ async def get_account(account_id: int, current_user: Annotated[User, Depends(get
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
 
 
-@router.post('/subscribe/{account_id}', status_code=status.HTTP_202_ACCEPTED)
+@router.post('/subscribe/{account_id}', status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def subscribe(account_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                     session: AsyncSession = Depends(get_async_session)):
 
@@ -139,7 +144,7 @@ async def subscribe(account_id: int, current_user: Annotated[User, Depends(get_c
         return {'message': f'You are already subscribed'}
 
 
-@router.delete('/subscribe/{account_id}', status_code=status.HTTP_202_ACCEPTED)
+@router.delete('/subscribe/{account_id}', status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def unsubscribe(account_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
     if account_id in current_user.subscriptions:
@@ -154,7 +159,7 @@ async def unsubscribe(account_id: int, current_user: Annotated[User, Depends(get
         return {'message': f'You are not subscribed'}
 
 
-@router.get('/subscriptions/', status_code=status.HTTP_200_OK)
+@router.get('/subscriptions/', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_subscriptions(current_user: Annotated[User, Depends(get_current_active_user)],
                             stack: str = '',
                             first_name: str = Query(alias='firstName', default=''),
@@ -166,7 +171,7 @@ async def get_subscriptions(current_user: Annotated[User, Depends(get_current_ac
                                      first_name=first_name, last_name=last_name))
 
 
-@router.get('/subscribers/', status_code=status.HTTP_200_OK)
+@router.get('/subscribers/', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_subscribers(current_user: Annotated[User, Depends(get_current_active_user)],
                           stack: str = '',
                           first_last_name: str = Query(alias='firstLastName', default=''),

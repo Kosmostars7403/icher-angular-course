@@ -18,6 +18,10 @@ from application.community.schemas import CommunityReadSchema, CommunityCreateSc
 from application.community.services import update_author_from_community
 from application.community.validators import validate_community_admin
 from database.db import get_async_session
+from fastapi_limiter.depends import RateLimiter
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
 
 router = APIRouter(
     tags=['community'],
@@ -34,14 +38,14 @@ IMAGE_EXTENSIONS = [
 ]
 
 
-@router.get('/', status_code=status.HTTP_200_OK)
+@router.get('/', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_communities(name: str | None = None, themes: str | None = None, tags: str | None = None,
                           user: User = Depends(get_current_active_user),
                           session: AsyncSession = Depends(get_async_session)) -> Page[CommunityShortReadSchema]:
     return paginate(await get_all_communities(name=name, themes=themes, tags=tags, user=user, session=session))
 
 
-@router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema)
+@router.get('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema, dependencies=[LIMITER_DEPENDS])
 async def get_community(community_id: int, user: User = Depends(get_current_active_user),
                         session: AsyncSession = Depends(get_async_session)):
 
@@ -52,7 +56,7 @@ async def get_community(community_id: int, user: User = Depends(get_current_acti
 
 
 @router.get('/{community_id}/posts', status_code=status.HTTP_200_OK,
-            dependencies=[])
+            dependencies=[LIMITER_DEPENDS])
 async def get_community_posts(community_id: int, user: User = Depends(get_current_active_user), session: AsyncSession = Depends(get_async_session))  \
         -> Page[PostReadSchema]:
 
@@ -71,19 +75,19 @@ async def get_community_posts(community_id: int, user: User = Depends(get_curren
 
 
 @router.get('/subscribers/{community_id}',
-            dependencies=[Depends(get_current_active_user)])
+            dependencies=[Depends(get_current_active_user), LIMITER_DEPENDS])
 async def get_community_subscribers(community_id: int,
                                     session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
     return paginate(await get_community_subscribers_db(community_id=community_id, session=session))
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=CommunityReadSchema)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=CommunityReadSchema, dependencies=[LIMITER_DEPENDS])
 async def create_community(community: CommunityCreateSchema, user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
     return await create_community_db(community=community, user=user, session=session)
 
 
-@router.patch('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema)
+@router.patch('/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema, dependencies=[LIMITER_DEPENDS])
 async def update_community(community_id: int, community: CommunityUpdateSchema,
                            user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
@@ -99,7 +103,7 @@ async def update_community(community_id: int, community: CommunityUpdateSchema,
     return await update_author_from_community(await get_community_by_id(community_id=community_id, user=user, session=session))
 
 
-@router.delete('/{community_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{community_id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[LIMITER_DEPENDS])
 async def delete_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                            session: AsyncSession = Depends(get_async_session)):
     community = await get_community_by_id(community_id=community_id, user=user, session=session)
@@ -112,7 +116,7 @@ async def delete_community(community_id: int, user: Annotated[User, Depends(get_
     await delete_community_db(community_id=community_id, user=user, session=session)
 
 
-@router.post('/{community_id}/join', status_code=status.HTTP_200_OK)
+@router.post('/{community_id}/join', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def join_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                          session: AsyncSession = Depends(get_async_session)):
     community = await get_community_by_id(community_id=community_id, user=user, session=session)
@@ -133,7 +137,7 @@ async def join_community(community_id: int, user: Annotated[User, Depends(get_cu
         return {'message': f'You are already subscribed'}
 
 
-@router.delete('/{community_id}/join', status_code=status.HTTP_202_ACCEPTED)
+@router.delete('/{community_id}/join', status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def leave_community(community_id: int, user: Annotated[User, Depends(get_current_active_user)],
                           session: AsyncSession = Depends(get_async_session)):
     community = await get_community_by_id(community_id=community_id, user=user, session=session)
@@ -154,7 +158,7 @@ async def leave_community(community_id: int, user: Annotated[User, Depends(get_c
         return {'message': f'You are not subscribed'}
 
 
-@router.post('/upload_image/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema)
+@router.post('/upload_image/{community_id}', status_code=status.HTTP_200_OK, response_model=CommunityReadSchema, dependencies=[LIMITER_DEPENDS])
 async def upload_image(community_id: int, image_type: ImageType,
                        user: Annotated[User, Depends(get_current_active_user)],
                        image: UploadFile = File(...),
@@ -195,7 +199,7 @@ async def upload_image(community_id: int, image_type: ImageType,
     return await get_community_by_id(community_id=community_id, user=user, session=session)
 
 
-@router.delete('/delete_image/{community_id}', status_code=status.HTTP_202_ACCEPTED, response_model=CommunityReadSchema)
+@router.delete('/delete_image/{community_id}', status_code=status.HTTP_202_ACCEPTED, response_model=CommunityReadSchema, dependencies=[LIMITER_DEPENDS])
 async def delete_image(community_id: int, image_type: ImageType,
                        user: Annotated[User, Depends(get_current_active_user)],
                        session: AsyncSession = Depends(get_async_session)):

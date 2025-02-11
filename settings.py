@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     SECRET_KEY_JWT: str
     SECRET_KEY_AUTH: str
 
+    LIMIT_SEC: int
+    LIMIT_TIMES: int
+
     class Config:
         env_file = ".env"
 

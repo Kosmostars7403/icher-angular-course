@@ -9,6 +9,10 @@ from application.like.crud import create_like as create_like_db, delete_like as 
     get_like_by_user_and_post_id
 from application.like.schemas import LikeCreateSchema
 from database.db import get_async_session
+from fastapi_limiter.depends import RateLimiter
+from settings import settings
+
+LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
 
 router = APIRouter(
     tags=['post'],
@@ -16,7 +20,7 @@ router = APIRouter(
 )
 
 
-@router.post('/{post_id}', status_code=status.HTTP_201_CREATED)
+@router.post('/{post_id}', status_code=status.HTTP_201_CREATED, dependencies=[LIMITER_DEPENDS])
 async def create_like(post_id: int, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
     like = await get_like_by_user_and_post_id(user_id=user.id, post_id=post_id, session=session)
@@ -33,7 +37,7 @@ async def create_like(post_id: int, user: Annotated[User, Depends(get_current_ac
 
 
 
-@router.delete('/{post_id}', status_code=status.HTTP_202_ACCEPTED)
+@router.delete('/{post_id}', status_code=status.HTTP_202_ACCEPTED, dependencies=[LIMITER_DEPENDS])
 async def delete_like(post_id: int, user: Annotated[User, Depends(get_current_active_user)],
                       session: AsyncSession = Depends(get_async_session)):
 
