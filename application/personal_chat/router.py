@@ -2,6 +2,7 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi_limiter.depends import RateLimiter, WebSocketRateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.account.crud import get_user_by_id
@@ -13,8 +14,6 @@ from application.personal_chat.crud import get_personal_chat, get_personal_chats
 from application.personal_chat.schemas import PersonalChatReadSchema, PersonalChatReadShortSchema
 from application.personal_chat.ws_manager import manager, ERROR_TOKEN
 from database.db import get_async_session
-
-from fastapi_limiter.depends import RateLimiter
 from settings import settings
 
 LIMITER_DEPENDS = Depends(RateLimiter(times=settings.LIMIT_TIMES, seconds=settings.LIMIT_SEC))
@@ -23,7 +22,6 @@ router = APIRouter(
     tags=['chat'],
     prefix='/chat'
 )
-
 
 @router.post('/{user_id}', response_model=PersonalChatReadSchema, dependencies=[LIMITER_DEPENDS])
 async def create_personal_chat(user_id: int, current_user: Annotated[User, Depends(get_current_active_user)],
@@ -74,11 +72,10 @@ async def get_chats(current_user: Annotated[User, Depends(get_current_active_use
 
     return chats_schemas
 
-
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-    user = None
+    ratelimit = WebSocketRateLimiter(times=8, seconds=settings.LIMIT_SEC)
 
     try:
         sec_websocket_protocol = websocket._headers['sec-websocket-protocol']
@@ -91,17 +88,21 @@ async def websocket_endpoint(websocket: WebSocket):
             message=ERROR_TOKEN,
             websocket=websocket
         )
+        await websocket.close(reason='Invalid token')
+        return
 
     if user:
         await manager.add_user_connection(websocket, user.id)
         await manager.send_unread_notify(current_user=user)
 
     try:
-        while True:
-            data = await websocket.receive_text()
 
+        while True:
+
+            data = await websocket.receive_text()
             try:
                 data = json.loads(data)
+                await ratelimit(websocket, context_key=data)
 
                 if not isinstance(data, dict):
                     await manager.send_personal_message(
@@ -118,6 +119,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     await manager.send_message_to_chat(data, websocket, user=user)
 
+            except HTTPException:
+                await manager.send_personal_message(
+                    message=json.dumps({'status': 'error', 'message': 'Too many messages'}),
+                    websocket=websocket
+                )
+
             except Exception:
                 await manager.send_personal_message(
                     message=json.dumps({'status': 'error', 'message': 'Invalid message'}),
@@ -128,3 +135,41 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
         if user:
             manager.disconnect_user(user.id)
+
+# html = '''<!DOCTYPE html>
+# <html>
+#     <head>
+#         <title>WebSocket Example</title>
+#     </head>
+#     <body>
+#         <h1>WebSocket Example</h1>
+#         <button onclick="connectWebSocket()">Connect</button>
+#         <script>
+#             function connectWebSocket() {
+#                 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidXNlcm5hbWUiLCJleHAiOjE3NDA0ODQ3MTN9.cm6DMJVABsBr7-25X9ooUVx3D2gC91Eepq4a8jF1lws"; // Replace
+#                 let ws = new WebSocket("ws://localhost:8000/chat/ws", [token]);
+#                 ws.onmessage = function(event) {
+#                     const message = event.data;
+#                     alert("Message from server: " + message);
+#                 };
+#                 ws.onopen = function() {
+#                     ws.send('{"text": "Hello from server", "chat_id": 9}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                     ws.send('{"text": "Hello from server", "chat_id": 2}');
+#                 };
+#             }
+#         </script>
+#     </body>
+# </html>
+# '''
+#
+# @router.get("/chat/test", response_class=HTMLResponse)
+# async def get():
+#     return html
