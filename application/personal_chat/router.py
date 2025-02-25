@@ -2,7 +2,7 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+# from fastapi.responses import HTMLResponse
 from fastapi_limiter.depends import RateLimiter, WebSocketRateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -138,31 +138,31 @@ async def websocket_endpoint(websocket: WebSocket):
         if user:
             manager.disconnect_user(user.id)
 
-html = '''<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebSocket Example</title>
-    </head>
-    <body>
-        <h1>WebSocket Example</h1>
-        <button onclick="connectWebSocket()">Connect</button>
-        <script>
-            function connectWebSocket() {
-                let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidXNlcm5hbWUiLCJleHAiOjE3NDA0ODQ3MTN9.cm6DMJVABsBr7-25X9ooUVx3D2gC91Eepq4a8jF1lws"; // Replace
-                let ws = new WebSocket("ws://localhost:8000/chat/ws", [token]);
-                ws.onmessage = function(event) {
-                    const message = event.data;
-                    alert("Message from server: " + message);
-                };
-                ws.onopen = function() {
-                    ws.send('{"text": "Hello from server", "chat_id": 9}');
-                };
-            }
-        </script>
-    </body>
-</html>
-'''
-
-@router.get("/chat/test", response_class=HTMLResponse)
-async def get():
-    return html
+# html = '''<!DOCTYPE html>
+# <html>
+#     <head>
+#         <title>WebSocket Example</title>
+#     </head>
+#     <body>
+#         <h1>WebSocket Example</h1>
+#         <button onclick="connectWebSocket()">Connect</button>
+#         <script>
+#             function connectWebSocket() {
+#                 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidXNlcm5hbWUiLCJleHAiOjE3NDA0ODQ3MTN9.cm6DMJVABsBr7-25X9ooUVx3D2gC91Eepq4a8jF1lws"; // Replace
+#                 let ws = new WebSocket("ws://localhost:8000/chat/ws", [token]);
+#                 ws.onmessage = function(event) {
+#                     const message = event.data;
+#                     alert("Message from server: " + message);
+#                 };
+#                 ws.onopen = function() {
+#                     ws.send('{"text": "Hello from server", "chat_id": 9}');
+#                 };
+#             }
+#         </script>
+#     </body>
+# </html>
+# '''
+#
+# @router.get("/chat/test", response_class=HTMLResponse)
+# async def get():
+#     return html
