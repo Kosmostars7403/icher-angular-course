@@ -89,6 +89,7 @@ async def websocket_endpoint(websocket: WebSocket):
             websocket=websocket
         )
         await websocket.close(reason='Invalid token')
+        manager.disconnect(websocket)
         return
 
     if user:
