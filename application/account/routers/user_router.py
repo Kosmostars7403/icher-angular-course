@@ -160,22 +160,49 @@ async def unsubscribe(account_id: int, current_user: Annotated[User, Depends(get
 
 
 @router.get('/subscriptions/', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
+@router.get('/subscriptions/{account_id}', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_subscriptions(current_user: Annotated[User, Depends(get_current_active_user)],
                             stack: str = '',
                             first_name: str = Query(alias='firstName', default=''),
                             last_name: str = Query(alias='lastName', default=''),
                             user_filter: UserFilter = FilterDepends(UserFilter),
-                            session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
-    return paginate(
-        await get_user_subscriptions(user=current_user, session=session, user_filter=user_filter, stack=stack,
+                            session: AsyncSession = Depends(get_async_session),
+                            account_id: int = None) -> Page[UserReadSchemaShort]:
+
+    if not account_id:
+        return paginate(await get_user_subscriptions(user=current_user, session=session, user_filter=user_filter, stack=stack,
                                      first_name=first_name, last_name=last_name))
+
+    user = await get_user_by_id(user_id=account_id, session=session)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+
+    return paginate(await get_user_subscriptions(user=user, session=session, user_filter=user_filter, stack=stack,
+                                        first_name=first_name, last_name=last_name))
+
 
 
 @router.get('/subscribers/', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
+@router.get('/subscribers/{account_id}', status_code=status.HTTP_200_OK, dependencies=[LIMITER_DEPENDS])
 async def get_subscribers(current_user: Annotated[User, Depends(get_current_active_user)],
                           stack: str = '',
                           first_last_name: str = Query(alias='firstLastName', default=''),
                           user_filter: UserFilter = FilterDepends(UserFilter),
-                          session: AsyncSession = Depends(get_async_session)) -> Page[UserReadSchemaShort]:
-    return paginate(await get_user_subscribers(user=current_user, session=session, user_filter=user_filter, stack=stack,
-                                               first_last_name=first_last_name))
+                          session: AsyncSession = Depends(get_async_session),
+                          account_id: int = None) -> Page[UserReadSchemaShort]:
+
+    if not account_id:
+        return paginate(
+            await get_user_subscribers(user=current_user, session=session, user_filter=user_filter, stack=stack,
+                                       first_last_name=first_last_name))
+
+    user = await get_user_by_id(user_id=account_id, session=session)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+
+    return paginate(await get_user_subscribers(user=user, session=session, user_filter=user_filter, stack=stack,
+                                                   first_last_name=first_last_name))
+
+
