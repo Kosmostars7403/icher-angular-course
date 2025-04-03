@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, File, UploadFile, HTTPException, Query
@@ -13,8 +14,10 @@ from application.account.filters import UserFilter
 from application.account.helpers import get_current_active_user
 from application.account.models import User, IMAGE_DIR
 from application.account.schemas.user_schemas import UserReadSchema, UserUpdateSchema, UserReadSchemaShort
+from application.utils import delete_image_by_path
 from database.db import get_async_session
 from fastapi_limiter.depends import RateLimiter
+import uuid
 
 from settings import settings
 
@@ -79,7 +82,11 @@ async def load_image(current_user: Annotated[User, Depends(get_current_active_us
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f'Image type {image_type} is not supported')
 
-    filename = f"{current_user.username}.{image_type}"
+    delete_image_by_path(image_path=current_user.avatar_url)
+
+    random_str = str(uuid.uuid4())
+
+    filename = f"{current_user.username}_{random_str[:8]}.{image_type}"
 
     avatar_url = os.path.join(IMAGE_DIR, filename)
 

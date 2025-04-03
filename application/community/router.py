@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, File
@@ -17,6 +18,7 @@ from application.community.schemas import CommunityReadSchema, CommunityCreateSc
     PostReadSchema, CommunityShortReadSchema
 from application.community.services import update_author_from_community
 from application.community.validators import validate_community_admin
+from application.utils import delete_image_by_path
 from database.db import get_async_session
 from fastapi_limiter.depends import RateLimiter
 from settings import settings
@@ -174,11 +176,15 @@ async def upload_image(community_id: int, image_type: ImageType,
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f'Image format {image_format} is not supported')
 
+    random_str = str(uuid.uuid4())
+
     match image_type:
         case ImageType.BANNER:
-            filename = f"{community_id}_banner.{image_format}"
+            delete_image_by_path(image_path=community.banner_url)
+            filename = f"{community_id}_banner_{random_str[:8]}.{image_format}"
         case ImageType.AVATAR:
-            filename = f"{community_id}_avatar.{image_format}"
+            delete_image_by_path(image_path=community.avatar_url)
+            filename = f"{community_id}_avatar_{random_str[:8]}.{image_format}"
 
     image_url = os.path.join(IMAGE_DIR, filename)
 
