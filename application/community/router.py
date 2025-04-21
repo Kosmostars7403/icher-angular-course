@@ -18,6 +18,7 @@ from application.community.schemas import CommunityReadSchema, CommunityCreateSc
     PostReadSchema, CommunityShortReadSchema
 from application.community.services import update_author_from_community
 from application.community.validators import validate_community_admin
+from application.post.models import Post
 from application.utils import delete_image_by_path
 from database.db import get_async_session
 from fastapi_limiter.depends import RateLimiter
@@ -63,10 +64,10 @@ async def get_community_posts(community_id: int, user: User = Depends(get_curren
         -> Page[PostReadSchema]:
 
     if community := await get_community_by_id(community_id=community_id, user=user, session=session):
-
+        sorted_posts = sorted(community.posts, key=lambda post: post.id, reverse=True)
         posts = []
 
-        for post in community.posts:
+        for post in sorted_posts:
             model = PostReadSchema.model_validate(post)
             model.author = CommunityShortReadSchema.model_validate(community)
             posts.append(model)
