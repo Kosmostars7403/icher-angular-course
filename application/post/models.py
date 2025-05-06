@@ -25,7 +25,7 @@ class Post(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     updated_at: Mapped[datetime | None] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    comments: Mapped[list['Comment']] = relationship(back_populates='post')
+    comments: Mapped[list['Comment']] = relationship(back_populates='post', order_by='Comment.id')
     author: Mapped['User'] = relationship(back_populates='posts')
     community: Mapped['Community'] = relationship(back_populates='posts')
     likes: Mapped[list['Like']] = relationship(back_populates='post')
