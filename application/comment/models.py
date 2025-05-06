@@ -24,4 +24,4 @@ class Comment(Base):
 
     post: Mapped['Post'] = relationship(back_populates='comments')
     author: Mapped['User'] = relationship(back_populates='comments')
-    comments: Mapped[list['Comment']] = relationship(remote_side=[comment_id])
+    comments: Mapped[list['Comment']] = relationship(remote_side=[comment_id], order_by='Comment.id')
