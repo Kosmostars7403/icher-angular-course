@@ -93,11 +93,10 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
         return
 
-    if user:
-        await manager.add_user_connection(websocket, user.id)
-        await manager.send_unread_notify(current_user=user)
-
     try:
+        if user:
+            await manager.add_user_connection(websocket, user.id)
+            await manager.send_unread_notify(current_user=user)
 
         while True:
 
@@ -134,6 +133,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 )
 
     except WebSocketDisconnect:
+        print(f"WebSocket disconnected for user {user.id if user else 'unknown'}")
+    except Exception as e:
+        print(f'Error with websocket: {e}')
+    finally:
         manager.disconnect(websocket)
         if user:
             manager.disconnect_user(user.id)
@@ -145,18 +148,67 @@ async def websocket_endpoint(websocket: WebSocket):
 #     </head>
 #     <body>
 #         <h1>WebSocket Example</h1>
+#         <div>
+#             <label for="token-input">Token:</label>
+#             <input type="text" id="token-input" style="width: 300px;"
+#                    value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiZ2lkZHlPYXRtZWFsMyIsImV4cCI6MTc0OTk5OTY1NX0.YLBmdEbUsIIZrb40hEPAQswSuJW1QkIObSi3cttoK3Q">
+#         </div>
+#         <div>
+#             <label for="message-input">Message:</label>
+#             <input type="text" id="message-input" value='{"text": "Hello from server", "chat_id": 9}'>
+#         </div>
 #         <button onclick="connectWebSocket()">Connect</button>
+#         <button onclick="sendMessage()" id="send-btn" disabled>Send Message</button>
+#
 #         <script>
+#             let ws = null;
+#
 #             function connectWebSocket() {
-#                 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwic3ViIjoidXNlcm5hbWUiLCJleHAiOjE3NDA0ODQ3MTN9.cm6DMJVABsBr7-25X9ooUVx3D2gC91Eepq4a8jF1lws"; // Replace
-#                 let ws = new WebSocket("ws://localhost:8000/chat/ws", [token]);
+#                 const token = document.getElementById('token-input').value;
+#                 if (!token) {
+#                     alert("Please enter a token");
+#                     return;
+#                 }
+#
+#                 ws = new WebSocket("ws://localhost:8000/chat/ws", [token]);
+#
 #                 ws.onmessage = function(event) {
 #                     const message = event.data;
 #                     alert("Message from server: " + message);
 #                 };
+#
 #                 ws.onopen = function() {
-#                     ws.send('{"text": "Hello from server", "chat_id": 9}');
+#                     alert("WebSocket connection established");
+#                     document.getElementById('send-btn').disabled = false;
 #                 };
+#
+#                 ws.onclose = function() {
+#                     alert("WebSocket connection closed");
+#                     document.getElementById('send-btn').disabled = true;
+#                 };
+#
+#                 ws.onerror = function(error) {
+#                     alert("WebSocket error: " + error);
+#                 };
+#             }
+#
+#             function sendMessage() {
+#                 if (!ws || ws.readyState !== WebSocket.OPEN) {
+#                     alert("WebSocket is not connected");
+#                     return;
+#                 }
+#
+#                 const message = document.getElementById('message-input').value;
+#                 if (!message) {
+#                     alert("Please enter a message");
+#                     return;
+#                 }
+#
+#                 try {
+#                     ws.send(message);
+#                 } catch (error) {
+#                     alert("Error sending message: " + error);
+#                 }
 #             }
 #         </script>
 #     </body>

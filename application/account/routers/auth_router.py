@@ -69,7 +69,7 @@ async def logout():
     return {'message': 'logout'}
 
 
-@router.post('/register', include_in_schema=True)
+@router.post('/register', include_in_schema=False)
 async def create_new_user(new_user: UserCreateSchema, session: AsyncSession = Depends(get_async_session)):
     user_data = new_user.model_dump()
 
