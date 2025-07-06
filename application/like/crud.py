@@ -5,7 +5,7 @@ from application.like.models import Like
 from application.like.schemas import LikeCreateSchema
 
 async def get_like_by_user_and_post_id(user_id: int, post_id: int, session: AsyncSession):
-    stmt = select(Like).filter(Like.user_id == user_id and Like.post_id == post_id)
+    stmt = select(Like).filter(Like.user_id == user_id, Like.post_id == post_id)
     result = await session.execute(stmt)
     result = result.scalar()
     return result if result else None
