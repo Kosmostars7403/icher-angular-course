@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, alias_generators, ConfigDict, field_validator
 
-from application.account.schemas.user_schemas import UserReadSchema, UserReadSchemaShort, UserReadSmallSchema
+from application.account.schemas.user_schemas import UserReadSchemaShort
 
 
 class CommentReadSchema(BaseModel):
@@ -11,7 +11,7 @@ class CommentReadSchema(BaseModel):
 
     id: int
     text: str
-    author: UserReadSmallSchema
+    author: UserReadSchemaShort
     post_id: int
     comment_id: int | None = None
     created_at: datetime
