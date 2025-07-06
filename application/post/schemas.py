@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import List, Any, Optional
 
-from pydantic import BaseModel, ConfigDict, alias_generators, field_validator
+from pydantic import BaseModel, ConfigDict, alias_generators, field_validator, computed_field, model_validator
 
 from application.account.schemas.user_schemas import UserReadSchemaShort
 from application.comment.schemas import CommentReadWithChildSchema
@@ -34,11 +35,29 @@ class PostReadSchema(BaseModel):
     images: list[str] | None = None
     created_at: datetime
     updated_at: datetime | None = None
-    likes: int
 
-    @field_validator('likes', mode='before')
-    def validate_likes(cls, v):
-        return len([like for like in v])
+    likes: int = 0
+    likes_users: Optional[List] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def transform_likes(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return data
+
+        if hasattr(data, 'likes'):
+            likes_list = data.likes
+            likes_users = [like.user_id for like in likes_list]
+
+            # Создаем словарь с данными
+            result = {
+                **data.__dict__,
+                'likes': len(likes_list),
+                'likes_users': likes_users
+            }
+            return result
+
+        return data
 
     comments: list[CommentReadWithChildSchema] | None = []
 
