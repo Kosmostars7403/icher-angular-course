@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from application.account.models import User
 from application.comment.models import Comment
 from application.community.models import Community
+from application.like.models import Like
 from application.post.models import Post
 from application.post.schemas import PostCreateSchema, PostUpdateSchema
 
@@ -60,7 +61,11 @@ async def delete_post(post_id: int, session: AsyncSession):
         for image in post.images:
             if os.path.exists(image):
                 os.remove(image)
+
     stmt = delete(Comment).where(Comment.post_id == post.id)
+    await session.execute(stmt)
+
+    stmt = delete(Like).where(Like.post_id == post.id)
     await session.execute(stmt)
 
     await session.delete(post)
