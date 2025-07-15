@@ -4,7 +4,6 @@ from typing import Optional, List, Any
 from pydantic import BaseModel, ConfigDict, alias_generators, model_validator, field_validator
 
 from application.account.schemas.user_schemas import UserReadSchemaShort
-from application.comment.schemas import CommentReadWithChildSchema
 from application.community.models import CommunityThemes as CommunityTheme
 
 
@@ -26,6 +25,23 @@ class CommunityShortReadSchema(BaseModel):
     subscribers_amount: int | None = 0
     created_at: datetime
     is_joined: bool = False
+
+class CommentReadSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True, alias_generator=alias_generators.to_camel,
+                              populate_by_name=True)
+
+    id: int
+    text: str
+    author: UserReadSchemaShort | CommunityShortReadSchema = None
+    post_id: int
+    comment_id: int | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+class CommentReadWithChildSchema(CommentReadSchema):
+    comments: list[CommentReadSchema]
+
 
 class PostReadSchema(BaseModel):
     model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True,
