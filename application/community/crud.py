@@ -17,7 +17,8 @@ from application.post.models import Post
 async def get_community_by_id(community_id: int, user: User, session: AsyncSession) -> Community | None:
     community = await session.get(Community, community_id, options=[
         selectinload(Community.posts).options(
-            selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
+            selectinload(Post.comments).options(selectinload(Comment.author),
+                                                selectinload(Comment.comments).selectinload(Comment.author)),
             selectinload(Post.likes)),
         selectinload(Community.admin)])
 
@@ -33,7 +34,8 @@ async def get_community_by_id(community_id: int, user: User, session: AsyncSessi
 async def get_all_communities(name: str | None, themes: str | None, tags: str | None, user: User, session: AsyncSession):
     stmt = select(Community).options(
         selectinload(Community.posts).options(
-            selectinload(Post.comments).options(selectinload(Comment.author), selectinload(Comment.comments)),
+            selectinload(Post.comments).options(selectinload(Comment.author),
+                                                selectinload(Comment.comments).selectinload(Comment.author)),
             selectinload(Post.likes)),
         selectinload(Community.admin)
     ).order_by(Community.name)
