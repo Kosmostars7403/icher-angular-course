@@ -62,6 +62,8 @@ class PostReadSchema(BaseModel):
 
         return data
 
+    comments: list[CommentReadWithChildSchema] | None = []
+
 class CommunityReadSchema(CommunityShortReadSchema):
     posts: list[PostReadSchema] | None = []
 
