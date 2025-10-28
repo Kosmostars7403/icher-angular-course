@@ -19,7 +19,7 @@ class Post(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     author_id: Mapped[BigInteger] = mapped_column(BIGINT, ForeignKey('user.id'))
     community_id: Mapped[int | None] = mapped_column(ForeignKey('community.id'))
-    title: Mapped[str] = mapped_column(String(255))
+    title: Mapped[str | None] = mapped_column(String(255))
     content: Mapped[str | None] = mapped_column(String)
     images: ARRAY | None = Column(ARRAY(String), default=[])
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
